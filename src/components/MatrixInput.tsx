@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import './MatrixInput.scss';
 import {Bracket} from './util/MathSymbols';
 import MathBoxScene from './GraphAnimate';
+import { displayStepByStep } from '../lib/eigenStuffFinder';
 
 interface MatrixInputProps {
   onMatrixChange?: (matrix: number[][]) => void;
@@ -12,6 +13,15 @@ function MatrixInput({ onMatrixChange }: MatrixInputProps) {
   const [matrix, setMatrix] = useState<number[][]>(() => 
     Array(3).fill(null).map(() => Array(3).fill(0))
   );
+  const [stepByStepSolution, setStepByStepSolution] = useState<string>(() => {
+    // Calculate initial solution
+    try {
+      const initialMatrix = Array(3).fill(null).map(() => Array(3).fill(0));
+      return displayStepByStep(initialMatrix);
+    } catch (error) {
+      return 'Error calculating eigenvalues: ' + (error as Error).message;
+    }
+  });
 
   const updateMatrixSize = useCallback((newSize: number) => {
     if (0 > newSize || newSize > 5) {
@@ -25,6 +35,14 @@ function MatrixInput({ onMatrixChange }: MatrixInputProps) {
     );
     setMatrix(newMatrix);
     onMatrixChange?.(newMatrix);
+    
+    // Calculate and display step-by-step solution
+    try {
+      const solution = displayStepByStep(newMatrix);
+      setStepByStepSolution(solution);
+    } catch (error) {
+      setStepByStepSolution('Error calculating eigenvalues: ' + (error as Error).message);
+    }
   }, [matrix, onMatrixChange]);
 
   const updateMatrixValue = useCallback((row: number, col: number, value: string) => {
@@ -36,6 +54,14 @@ function MatrixInput({ onMatrixChange }: MatrixInputProps) {
     );
     setMatrix(newMatrix);
     onMatrixChange?.(newMatrix);
+    
+    // Calculate and display step-by-step solution
+    try {
+      const solution = displayStepByStep(newMatrix);
+      setStepByStepSolution(solution);
+    } catch (error) {
+      setStepByStepSolution('Error calculating eigenvalues: ' + (error as Error).message);
+    }
   }, [matrix, onMatrixChange]);
 
   const getColumnAsVertex = (colIndex: number): number[] => {
@@ -43,7 +69,7 @@ function MatrixInput({ onMatrixChange }: MatrixInputProps) {
   };
 
   const renderMatrix = () => (
-    
+
     <div className="container">
         <Bracket direction="left" height={size * 40} />
         <div className="matrix-grid" style={{ gridTemplateColumns: 
@@ -117,6 +143,13 @@ function MatrixInput({ onMatrixChange }: MatrixInputProps) {
       </div>
 
       {renderVertices()}
+      
+      {stepByStepSolution && (
+        <div className="eigenvalue-solution">
+          <h3>Eigenvalue Calculation Steps</h3>
+          <pre className="step-by-step">{stepByStepSolution}</pre>
+        </div>
+      )}
     </div>
   );
 }
