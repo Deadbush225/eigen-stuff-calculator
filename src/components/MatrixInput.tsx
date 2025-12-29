@@ -13,8 +13,10 @@ interface MatrixInputProps {
 
 function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) {
   const [size, setSize] = useState<number>(3);
-  const [f_size, setF_Size] = useState<number>(3);
+  const [f_size, setF_Size] = useState<string>(3);
   const [matrix, setMatrix] = useState<number[][]>([[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+  );
+  const [f_matrix, setF_Matrix] = useState<string[][]>([['1', '0', '0'], ['0', '1', '0'], ['0', '0', '1']]
   );
 
   const handleEigenspacesCalculated = useCallback((eigenspaces: Eigenspace[]) => {
@@ -32,6 +34,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
       )
     );
     setMatrix(newMatrix);
+    setF_Matrix(newMatrix.map(row => row.map(value => value.toString())));
     onMatrixChange?.(newMatrix);
   }, [matrix, onMatrixChange]);
 
@@ -51,6 +54,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
   };
 
   const renderMatrix = () => (
+    
 
     <div className="container">
         <Bracket direction="left" height={size * 40} />
@@ -58,15 +62,23 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
         `repeat(${size}, 1fr)` }}>
         {Array(size).fill(null).map((_, col) => (
             <div key={col} className="matrix-column">
-                {matrix.map((row, rowIdx) => (
-                    <input
-                        key={`${rowIdx}-${col}`}
-                        value={row[col]}
-                        onChange={(e) => updateMatrixValue(rowIdx, col, e.target.value)}
-                        className="matrix-cell"
+                {matrix.map((row, rowIdx) => {
+                    // let v = row[col] || 0;
+                    return (
+                        <input
+                            key={`${rowIdx}-${col}`}
+                            value={f_matrix[rowIdx]?.[col] ?? ''}
+                            onChange={(e) => {
+                                f_matrix[rowIdx][col] = e.target.value;
+                                if (!isNaN(parseFloat(e.target.value)) || e.target.value === '' || e.target.value === '-') {
+                                    updateMatrixValue(rowIdx, col, e.target.value);
+                                
+                                }
+                            }}
+                            className="matrix-cell"
                         step="0.1"
                     />
-                ))}
+                )})};
             </div>
         ))}
         </div>
