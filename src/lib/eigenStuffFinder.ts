@@ -50,11 +50,14 @@ export function solveRealRoots(inputCoeffs: PolynomialCoefficients): number[] {
             remainder = polyCoeffs[i] + (remainder * root);
             newCoeffs.push(remainder);
         }
-        return newCoeffs;
+        
+        // Clean up tiny coefficients that are likely numerical errors
+        return newCoeffs.map(coeff => Math.abs(coeff) < 1e-12 ? 0 : coeff);
     };
 
     // Recursive solver loop
-    while (coeffs.length > 1) {
+    let attempts = 0;
+    while (coeffs.length > 1 && attempts < 10) {
         // Optimization: Handle Linear Case directly (ax + b = 0)
         // This prevents numerical instability for the final root
         if (coeffs.length === 2) {
@@ -71,31 +74,61 @@ export function solveRealRoots(inputCoeffs: PolynomialCoefficients): number[] {
         const f = math.compile(exprStr);
         const fp = math.derivative(exprStr, 'x').compile();
 
-        let guess = Math.random() * 10 - 5; // Random guess between -5 and 5
         let found = false;
         
-        // Newton Loop (Max 1000 iterations)
-        for (let i = 0; i < 1000; i++) {
-            const y = f.evaluate({x: guess});
-            const dy = fp.evaluate({x: guess});
+        // Try multiple starting points for better convergence
+        const startingPoints = [
+            Math.random() * 10 - 5,  // Random guess
+            0,                       // Try zero
+            1,                       // Try one
+            -1,                      // Try negative one
+            ...roots.map(r => r + 0.1), // Try near existing roots for repeated roots
+        ];
+        
+        for (const initialGuess of startingPoints) {
+            let guess = initialGuess;
+            let converged = false;
+            
+            // Newton Loop (Max 100 iterations per starting point)
+            for (let i = 0; i < 100; i++) {
+                const y = f.evaluate({x: guess});
+                const dy = fp.evaluate({x: guess});
 
-            // Handle stationary points (derivative is 0)
-            if (Math.abs(dy) < 1e-7) {
-                guess = Math.random() * 10 - 5; // Restart with new guess
-                continue;
+                // If we're very close to zero, we found a root
+                if (Math.abs(y) < 1e-10) {
+                    roots.push(guess);
+                    coeffs = deflate(coeffs, guess);
+                    found = true;
+                    converged = true;
+                    break;
+                }
+
+                // Handle stationary points (derivative is 0)
+                if (Math.abs(dy) < 1e-10) {
+                    break; // Try next starting point
+                }
+
+                const newGuess = guess - (y / dy);
+
+                // Check for convergence
+                if (Math.abs(newGuess - guess) < 1e-10) {
+                    // Double-check that this is actually a root
+                    const rootCheck = f.evaluate({x: newGuess});
+                    if (Math.abs(rootCheck) < 1e-8) {
+                        roots.push(newGuess);
+                        coeffs = deflate(coeffs, newGuess);
+                        found = true;
+                        converged = true;
+                        break;
+                    }
+                }
+                guess = newGuess;
             }
-
-            const newGuess = guess - (y / dy);
-
-            // Check for convergence
-            if (Math.abs(newGuess - guess) < 1e-7) {
-                roots.push(newGuess);
-                coeffs = deflate(coeffs, newGuess);
-                found = true;
-                break;
-            }
-            guess = newGuess;
+            
+            if (converged) break;
         }
+        
+        attempts++;
         
         // Safety break: if we can't find a root (e.g., only complex roots left), stop.
         if (!found) break;
@@ -114,6 +147,10 @@ console.log("Poly 1 Roots:", solveRealRoots(poly1));
 // Example 2: x^4 - 10x^3 + 35x^2 - 50x + 24 (Roots: 1, 2, 3, 4)
 const poly2: PolynomialCoefficients = [1, -10, 35, -50, 24];
 console.log("Poly 2 Roots:", solveRealRoots(poly2));
+
+// Example 3: (x-1)^3 = x^3 - 3x^2 + 3x - 1 (Triple root: 1, 1, 1)
+const poly3: PolynomialCoefficients = [1, -3, 3, -1];
+console.log("Poly 3 Roots (x-1)^3:", solveRealRoots(poly3));
 
 /**
  * Manual Eigenvalue Calculator
@@ -183,9 +220,9 @@ function calculateDeterminantExpression(xIMinusA: (string | number)[][]): LatexS
   const n = xIMinusA.length;
   
   // Check for special cases first
-  if (isTriangularMatrix(xIMinusA)) {
-    return calculateTriangularDeterminant(xIMinusA);
-  }
+//   if (isTriangularMatrix(xIMinusA)) {
+    // return calculateTriangularDeterminant(xIMinusA);
+//   }
   
   switch (n) {
     case 1:
@@ -314,16 +351,18 @@ function calculateLargerDeterminant(matrix: (string | number)[][]): LatexString 
     return "Determinant calculation for matrices larger than 4x4 is not implemented.";
 }
 
+type characteristicPolynomial = {
+    expression: MathNode | string;
+    variables: string[];
+    coefficients: MathType[];
+}
+
 /**
  * Step 3: Parse and solve characteristic polynomial manually
  * Converts the determinant expression into a polynomial and finds roots
  */
 function solveCharacteristicPolynomial(
-  determinantExpr: {
-    expression: MathNode | string;
-    variables: string[];
-    coefficients: MathType[];
-}, 
+  determinantExpr: characteristicPolynomial, 
   inputMatrix: number[][]
 ): { polynomial: string, eigenvalues: (number|Complex)[] } {
   const n = inputMatrix.length;
@@ -787,31 +826,32 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   const determinantExpression = calculateDeterminantExpression(xIMinusA);
   console.log('Determinant expression: (Raw)', determinantExpression);
 
-  let mathjsexp;
+//   let mathjsexp;
   
-  try {
+//   try {
     const simplified = math.simplify(cleanExpressionLatex(determinantExpression))
     console.log("SIMPLIFIED:", simplified.toString());
-      mathjsexp = math.rationalize(simplified, {},true);
+      const mathjsexp = math.rationalize(simplified, {},true);
 
       console.log('Determinant expression: (Simplified)', mathjsexp.expression.toString());
       console.log('Coefficients:', mathjsexp.coefficients);
-    } catch (e) {
-    console.error('Error occurred while simplifying determinant expression:', e);
+    // } catch (e) {
+    // console.error('Error occurred while simplifying determinant expression:', e);
     // Cleanup or final steps if needed
-}
+// }
 
   // Step 3: Solve characteristic polynomial
-  const polynomialResult = mathjsexp ? 
-    solveCharacteristicPolynomial(mathjsexp, inputMatrix) :
-    { polynomial: `${determinantExpression} = 0`, eigenvalues: [] as (number | Complex)[] };
+//   const polynomialResult = mathjsexp ? 
+//     solveCharacteristicPolynomial(mathjsexp, inputMatrix) :
+//     { polynomial: `${determinantExpression} = 0`, eigenvalues: [] as (number | Complex)[] };
+     const polynomialResult = solveCharacteristicPolynomial(mathjsexp, inputMatrix);
 //   const polynomialResult = solveCharacteristicPolynomial("", inputMatrix);
   // compare solution to mathjs
 //   try {
       const mathjsResult = math.eigs(inputMatrix);
     console.log('Eigenvalues (mathjs):', mathjsResult.values);
 // } finally {
-      console.log('Eigenvalues (manual):', polynomialResult.eigenvalues);
+      console.log('Eigenvalues (manual):', polynomialResult);
 // }
       
 

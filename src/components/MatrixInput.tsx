@@ -13,7 +13,8 @@ interface MatrixInputProps {
 
 function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) {
   const [size, setSize] = useState<number>(3);
-  const [matrix, setMatrix] = useState<number[][]>([[1, 0, 1], [0, 1, 0], [1, 0, 1]]
+  const [f_size, setF_Size] = useState<number>(3);
+  const [matrix, setMatrix] = useState<number[][]>([[1, 0, 0], [0, 1, 0], [0, 0, 1]]
   );
 
   const handleEigenspacesCalculated = useCallback((eigenspaces: Eigenspace[]) => {
@@ -107,11 +108,18 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
           <label htmlFor="matrix-size">Matrix Size (n×n): </label>
           <input
             id="matrix-size"
-            // type="number"
+            type="number"
             // min="2"
             // max="10"
-            // value={size}
-            // onChange={(e) => updateMatrixSize(parseInt(e.target.value) || 1)}
+            value={f_size}
+            // onChange={(e) => setSize(parseInt(e.target.value))}
+            onChange={(e) => {
+                const newSize = parseInt(e.target.value);
+                setF_Size(newSize);
+                if (newSize > 0 && newSize <= 5) {
+                    updateMatrixSize(newSize);
+                }
+            }}
             className="size-input"
           />
         </div>
