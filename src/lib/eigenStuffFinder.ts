@@ -2,6 +2,7 @@ import React from 'react';
 import MathDisplay from '../components/util/MathDisplay';
 
 import { create, all, type MathNode, type MathType, type Complex } from 'mathjs';
+import { formatMatrix, nullSpaceBasis } from './matrixOperations';
 const math = create(all);
 
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
@@ -122,6 +123,7 @@ console.log("Poly 2 Roots:", solveRealRoots(poly2));
 
 export interface EigenResult {
   eigenvalues: (number | Complex)[];
+  eigenspaces: Eigenspace[];
   characteristicPolynomial: string;
   xIMinusA: (string | number)[][];
   determinantExpression: string;
@@ -677,6 +679,41 @@ function formatXIMinusAMatrix(xIMinusA: (string | number)[][]): string {
   return result;
 }
 
+import { type Eigenspace } from './eigen-types';
+
+function findEigenvectorBasis(xIMinusA: (string | number)[][], eigenvalue: number | Complex): Eigenspace {
+    // console.log("TEST");
+    const xIMinusACopy = JSON.parse(JSON.stringify(xIMinusA)) as (string | number)[][];
+    console.log("xI - A matrix:", formatMatrix(xIMinusACopy));
+    // console.log("dimensions:", xIMinusA.length, xIMinusA[0].length);
+
+    for (let i = 0; i < xIMinusACopy.length; i++) {
+        for (let j = 0; j < xIMinusACopy[i].length; j++) {
+            // console.log("Element:", xIMinusA[i][j]);
+            // console.log("Type:", typeof xIMinusA[i][j]);
+            if (typeof xIMinusACopy[i][j] === 'string') {
+                // Replace 'x' with eigenvalue
+                const x = math.evaluate((xIMinusACopy[i][j] as string).replace(/x/g, `${eigenvalue.toString()}`))
+
+                console.log("X:", x);
+                console.log("EIGENVALUE: ", eigenvalue.toString());
+                xIMinusACopy[i][j] = x;
+            }
+        }
+    }
+    console.log('Matrix for eigenvalue', eigenvalue, ':', formatMatrix(xIMinusACopy));
+
+
+    // row reduce the matrix to find null space
+    const nullSpace = nullSpaceBasis(xIMinusACopy as number[][]);
+    console.log("EigenSpace Basis", formatMatrix(nullSpace));
+
+    return {
+        eigenvalue,
+        basis: nullSpace,
+    };
+}
+
 /**
  * Main function to find eigenvalues following the manual mathematical approach
  */
@@ -736,6 +773,14 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   const isReal = polynomialResult.eigenvalues.every((val: number | Complex) => 
     typeof val === 'number' && isFinite(val) && !isNaN(val)
   ) && polynomialResult.eigenvalues.length != 0;
+
+  // Calculate eigenspaces for each eigenvalue
+  const eigenspaces: Eigenspace[] = [];
+  for (const val of polynomialResult.eigenvalues) {
+    console.log('---Finding eigenvector basis for eigenvalue:---', val);
+    const eigenspace = findEigenvectorBasis(xIMinusA, val);
+    eigenspaces.push(eigenspace);
+  }
   
   
   const steps = {
@@ -759,6 +804,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   
   return {
     eigenvalues: polynomialResult.eigenvalues,
+    eigenspaces,
     characteristicPolynomial: polynomialResult.polynomial,
     xIMinusA,
     determinantExpression,

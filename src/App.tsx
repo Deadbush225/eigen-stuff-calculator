@@ -3,19 +3,26 @@ import MatrixInput from './components/MatrixInput'
 import GraphAnimate from './components/GraphAnimate'
 import TransformationLegend from './components/TransformationLegend'
 import './App.css'
+import { type Eigenspace } from './lib/eigen-types';
 
 function App() {
   const [matrix, setMatrix] = useState<number[][]>([]);
+  const [basisVectors, setBasisVectors] = useState<Eigenspace[]>([]);
 
   const handleMatrixChange = (newMatrix: number[][]) => {
     setMatrix(newMatrix);
     console.log('Matrix updated:', newMatrix);
   };
 
+  const handleEigenspacesChange = (newEigenspaces: Eigenspace[]) => {
+    setBasisVectors(newEigenspaces);
+    console.log('Eigenspaces updated:', newEigenspaces);
+  };
+
   return (
     <div className="App">
       <h1>Eigen Stuff Calculator</h1>
-      <MatrixInput onMatrixChange={handleMatrixChange} />
+      <MatrixInput onMatrixChange={handleMatrixChange} onEigenspacesChange={handleEigenspacesChange} />
       
       {matrix.length > 0 && (
         <div className="matrix-info">
@@ -35,8 +42,9 @@ function App() {
             This visualization shows how your 3×3 matrix transforms the coordinate space in ℝ³.
             The thin lines represent the original basis vectors (e₁, e₂, e₃), 
             and the thick lines show where they go after transformation (Ae₁, Ae₂, Ae₃).
+            Eigenspaces are visualized as colored lines (1D) or planes (2D) with their corresponding eigenvalue labels.
           </p>
-          <GraphAnimate transformationMatrix={matrix} />
+          <GraphAnimate transformationMatrix={matrix} eigenspaces={basisVectors} />
           <TransformationLegend transformationMatrix={matrix} />
         </div>
       )}

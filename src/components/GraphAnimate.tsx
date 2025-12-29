@@ -3,17 +3,22 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { mathBox } from 'mathbox';
 import 'mathbox/mathbox.css';
+import { type Complex } from 'mathjs';
+
+import { type Eigenspace } from '../lib/eigen-types';
 
 interface MathBoxSceneProps {
   transformationMatrix?: number[][];
+  eigenspaces?: Eigenspace[];
 }
 
 const MathBoxScene: React.FC<MathBoxSceneProps> = ({ 
   transformationMatrix = [
-    [1, 0.5, 0],
-    [0, 1, 0.3], 
-    [0, 0, 1]
-  ]
+    [0, 0, 0],
+    [0, 0, 0], 
+    [0, 0, 0]
+  ], 
+  eigenspaces = []
 }) => {
   const containerRef = useRef(null);
 
@@ -367,11 +372,205 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
       opacity: 0.4,
     });
 
+    // Draw eigenspaces 
+    if (eigenspaces && eigenspaces.length > 0) {
+      const eigenspaceColors = ['#af00af', '#00afaf', '#afaf00', '#ff8000', '#8000ff'];
+      
+      eigenspaces.forEach((eigenspace, index) => {
+        // Type guard to ensure we have a proper Eigenspace object
+        if (!eigenspace || typeof eigenspace !== 'object' || !('eigenvalue' in eigenspace) || !('basis' in eigenspace)) {
+          return;
+        }
+        
+        if (!eigenspace.basis || eigenspace.basis.length === 0) {
+          return;
+        }
+        
+        const color = eigenspaceColors[index % eigenspaceColors.length];
+        const eigenvalue = typeof eigenspace.eigenvalue === 'number' 
+          ? eigenspace.eigenvalue.toFixed(3)
+          : `${(eigenspace.eigenvalue as Complex).re.toFixed(3)}+${(eigenspace.eigenvalue as Complex).im.toFixed(3)}i`;
+        
+        // Convert basis vectors to numerical format for visualization
+        const numericBasis = eigenspace.basis.map((vec: (string | number)[]) => 
+          vec.map((component: string | number) => typeof component === 'number' ? component : parseFloat(component.toString()) || 0)
+        );
+        
+        const dimension = numericBasis.length;
+        
+        if (dimension === 1) {
+          // 1D eigenspace: Draw as a line (eigenvector direction)
+          const basisVector = numericBasis[0] as number[];
+          if (basisVector.length >= 3) {
+            // Normalize and scale the vector for better visualization
+            const magnitude = Math.sqrt(basisVector[0]**2 + basisVector[1]**2 + basisVector[2]**2);
+            const scaleFactor = magnitude > 0 ? 3 / magnitude : 1;
+            const scaledVector = basisVector.map(x => x * scaleFactor);
+            
+            // Draw eigenspace line (both directions)
+            view.array({
+              data: [
+                [-scaledVector[0]*2, -scaledVector[1]*2, -scaledVector[2]*2],
+                [scaledVector[0]*2, scaledVector[1]*2, scaledVector[2]*2]
+              ],
+              channels: 3,
+            }).line({
+              color: color,
+              width: 8,
+              opacity: 0.8,
+            });
+            
+            // Draw eigenvector arrow
+            view.array({
+              data: [[0, 0, 0], scaledVector],
+              channels: 3,
+            }).line({
+              color: color,
+              width: 12,
+            });
+            
+            // Draw arrowhead (point)
+            view.array({
+              data: [scaledVector],
+              channels: 3,
+            }).point({
+              color: color,
+              size: 16,
+            });
+            
+            // Add eigenvalue label
+            view.array({
+              data: [[scaledVector[0] + 0.3, scaledVector[1] + 0.3, scaledVector[2] + 0.3]],
+              channels: 3,
+            }).text({
+              data: [`λ=${eigenvalue}`],
+            }).label({
+              color: color,
+              size: 14,
+            });
+          }
+          
+        } else if (dimension === 2) {
+          // 2D eigenspace: Draw as a plane using two basis vectors
+          const v1 = numericBasis[0] as number[];
+          const v2 = numericBasis[1] as number[];
+          
+          if (v1.length >= 3 && v2.length >= 3) {
+            // Create a grid of points to represent the plane
+            const gridSize = 5;
+            const gridPoints: number[][] = [];
+            
+            for (let i = -gridSize; i <= gridSize; i++) {
+              for (let j = -gridSize; j <= gridSize; j++) {
+                const s = i * 0.5;
+                const t = j * 0.5;
+                const point = [
+                  s * v1[0] + t * v2[0],
+                  s * v1[1] + t * v2[1],
+                  s * v1[2] + t * v2[2]
+                ];
+                gridPoints.push(point);
+              }
+            }
+            
+            // Draw the plane as a grid of points
+            view.array({
+              data: gridPoints,
+              channels: 3,
+            }).point({
+              color: color,
+              size: 4,
+              opacity: 0.6,
+            });
+            
+            // Draw the two basis vectors
+            view.array({
+              data: [[0, 0, 0], v1],
+              channels: 3,
+            }).line({
+              color: color,
+              width: 8,
+            });
+            
+            view.array({
+              data: [[0, 0, 0], v2],
+              channels: 3,
+            }).line({
+              color: color,
+              width: 8,
+            });
+            
+            // Draw basis vector endpoints
+            view.array({
+              data: [v1, v2],
+              channels: 3,
+            }).point({
+              color: color,
+              size: 12,
+            });
+            
+            // Add eigenvalue label
+            const midpoint = [
+              (v1[0] + v2[0]) / 2 + 0.3,
+              (v1[1] + v2[1]) / 2 + 0.3,
+              (v1[2] + v2[2]) / 2 + 0.3
+            ];
+            
+            view.array({
+              data: [midpoint],
+              channels: 3,
+            }).text({
+              data: [`λ=${eigenvalue}`],
+            }).label({
+              color: color,
+              size: 14,
+            });
+          }
+          
+        } else if (dimension === 3) {
+          // 3D eigenspace: The entire space (rare case, usually for λI)
+          // Draw coordinate planes with eigenspace color
+          view.grid({
+            axes: [1, 2],
+            color: color,
+            opacity: 0.3,
+            width: 3,
+          });
+          
+          view.grid({
+            axes: [1, 3],
+            color: color,
+            opacity: 0.2,
+            width: 3,
+          });
+          
+          view.grid({
+            axes: [2, 3],
+            color: color,
+            opacity: 0.2,
+            width: 3,
+          });
+          
+          // Add label at origin
+          view.array({
+            data: [[1, 1, 1]],
+            channels: 3,
+          }).text({
+            data: [`λ=${eigenvalue} (ℝ³)`],
+          }).label({
+            color: color,
+            size: 16,
+          });
+        }
+      });
+    }
+    
+
     // Cleanup on unmount
     return () => {
       three.destroy();
     };
-  }, [transformationMatrix]);
+  }, [transformationMatrix, eigenspaces]);
 
   return (
     <div 

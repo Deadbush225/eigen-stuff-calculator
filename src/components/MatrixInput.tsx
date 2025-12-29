@@ -3,17 +3,22 @@ import './MatrixInput.scss';
 import {Bracket} from './util/MathSymbols';
 // import MathBoxScene from './GraphAnimate';
 import EigenvalueSolution from './EigenvalueSolution';
+import { type Eigenspace } from '../lib/eigen-types';
 // import MathDisplay from './util/MathDisplay';
 
 interface MatrixInputProps {
   onMatrixChange?: (matrix: number[][]) => void;
+  onEigenspacesChange?: (eigenspaces: Eigenspace[]) => void;
 }
 
-function MatrixInput({ onMatrixChange }: MatrixInputProps) {
+function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) {
   const [size, setSize] = useState<number>(3);
-  const [matrix, setMatrix] = useState<number[][]>(() => 
-    Array(3).fill(null).map(() => Array(3).fill(0))
+  const [matrix, setMatrix] = useState<number[][]>([[1, 0, 1], [0, 1, 0], [1, 0, 1]]
   );
+
+  const handleEigenspacesCalculated = useCallback((eigenspaces: Eigenspace[]) => {
+    onEigenspacesChange?.(eigenspaces);
+  }, [onEigenspacesChange]);
 
   const updateMatrixSize = useCallback((newSize: number) => {
     if (0 > newSize || newSize > 5) {
@@ -119,7 +124,7 @@ function MatrixInput({ onMatrixChange }: MatrixInputProps) {
 
       {renderVertices()}
       
-      <EigenvalueSolution matrix={matrix} />
+      <EigenvalueSolution matrix={matrix} onEigenspacesCalculated={handleEigenspacesCalculated} />
     </div>
   );
 }
