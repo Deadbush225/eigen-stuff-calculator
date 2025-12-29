@@ -385,107 +385,42 @@ function solveCharacteristicPolynomial(
   };
 }
 
-/**
- * Solve 2x2 characteristic polynomial: x² - trace·x + det = 0
- */
-function solve2x2Characteristic(matrix: number[][]): { polynomial: string, eigenvalues: number[] } {
-  const a = matrix[0][0];
-  const b = matrix[0][1];
-  const c = matrix[1][0];
-  const d = matrix[1][1];
-  
-  const trace = a + d;
-  const determinant = a * d - b * c;
-  
-  const polynomial = `x² - ${trace}x + ${determinant} = 0`;
-  
-  // Use quadratic formula: x = (trace ± √(trace² - 4·det)) / 2
-  const discriminant = trace * trace - 4 * determinant;
-  
-  if (discriminant >= 0) {
-    const sqrtDiscriminant = Math.sqrt(discriminant);
-    const eigenvalues = [
-      (trace + sqrtDiscriminant) / 2,
-      (trace - sqrtDiscriminant) / 2
-    ];
-    return { polynomial, eigenvalues };
-  } else {
-    // Complex eigenvalues
-    console.warn('Complex eigenvalues detected for 2x2 matrix');
-    return { polynomial: polynomial + ' (complex roots)', eigenvalues: [] };
-  }
-}
+// /**
+//  * Check if matrix is diagonal
+//  */
+// function isDiagonalMatrix(matrix: number[][]): boolean {
+//   const n = matrix.length;
+//   for (let i = 0; i < n; i++) {
+//     for (let j = 0; j < n; j++) {
+//       if (i !== j && Math.abs(matrix[i][j]) > 1e-10) {
+//         return false;
+//       }
+//     }
+//   }
+//   return true;
+// }
 
-/**
- * Solve 3x3 characteristic polynomial (special cases)
- */
-function solve3x3Characteristic(
-  matrix: number[][], 
-  determinantExpr: string
-): { polynomial: string, eigenvalues: number[] } {
+// /**
+//  * Check if numerical matrix is triangular
+//  */
+// function isTriangularNumerical(matrix: number[][]): boolean {
+//   const n = matrix.length;
+//   let isUpper = true;
+//   let isLower = true;
   
-  // Check if diagonal matrix
-  if (isDiagonalMatrix(matrix)) {
-    return {
-      polynomial: `(x - ${matrix[0][0]})(x - ${matrix[1][1]})(x - ${matrix[2][2]}) = 0`,
-      eigenvalues: [matrix[0][0], matrix[1][1], matrix[2][2]]
-    };
-  }
+//   for (let i = 0; i < n; i++) {
+//     for (let j = 0; j < n; j++) {
+//       if (i > j && Math.abs(matrix[i][j]) > 1e-10) {
+//         isUpper = false;
+//       }
+//       if (i < j && Math.abs(matrix[i][j]) > 1e-10) {
+//         isLower = false;
+//       }
+//     }
+//   }
   
-  // Check if triangular matrix
-  if (isTriangularNumerical(matrix)) {
-    return {
-      polynomial: `(x - ${matrix[0][0]})(x - ${matrix[1][1]})(x - ${matrix[2][2]}) = 0`,
-      eigenvalues: [matrix[0][0], matrix[1][1], matrix[2][2]]
-    };
-  }
-  
-  // For general 3x3, we need to solve cubic equation
-  // This is complex, so we'll use a numerical approximation for now
-  const eigenvalues = solveNumerically(matrix);
-  
-  return {
-    polynomial: `Cubic characteristic polynomial: ${determinantExpr} = 0`,
-    eigenvalues
-  };
-}
-
-/**
- * Check if matrix is diagonal
- */
-function isDiagonalMatrix(matrix: number[][]): boolean {
-  const n = matrix.length;
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      if (i !== j && Math.abs(matrix[i][j]) > 1e-10) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-/**
- * Check if numerical matrix is triangular
- */
-function isTriangularNumerical(matrix: number[][]): boolean {
-  const n = matrix.length;
-  let isUpper = true;
-  let isLower = true;
-  
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      if (i > j && Math.abs(matrix[i][j]) > 1e-10) {
-        isUpper = false;
-      }
-      if (i < j && Math.abs(matrix[i][j]) > 1e-10) {
-        isLower = false;
-      }
-    }
-  }
-  
-  return isUpper || isLower;
-}
+//   return isUpper || isLower;
+// }
 
 /**
  * Numerical eigenvalue solver for complex cases

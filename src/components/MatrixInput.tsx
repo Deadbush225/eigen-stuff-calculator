@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import './MatrixInput.scss';
 import {Bracket} from './util/MathSymbols';
-import MathBoxScene from './GraphAnimate';
+// import MathBoxScene from './GraphAnimate';
 import EigenvalueSolution from './EigenvalueSolution';
-import MathDisplay from './util/MathDisplay';
+// import MathDisplay from './util/MathDisplay';
 
 interface MatrixInputProps {
   onMatrixChange?: (matrix: number[][]) => void;
