@@ -13,7 +13,7 @@ interface MatrixInputProps {
 
 function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) {
   const [size, setSize] = useState<number>(3);
-  const [f_size, setF_Size] = useState<string>(3);
+  const [f_size, setF_Size] = useState<number>(3);
   const [matrix, setMatrix] = useState<number[][]>([[1, 0, 0], [0, 1, 0], [0, 0, 1]]
   );
   const [f_matrix, setF_Matrix] = useState<string[][]>([['1', '0', '0'], ['0', '1', '0'], ['0', '0', '1']]

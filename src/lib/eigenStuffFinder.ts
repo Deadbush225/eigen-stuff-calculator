@@ -135,7 +135,7 @@ export function solveRealRoots(inputCoeffs: PolynomialCoefficients): number[] {
     }
 
     // Sort and format results (rounding to 4 decimals)
-    return roots.sort((a, b) => a - b).map(r => math.round(r, 4) as number);
+    return roots.sort((a, b) => a - b).map(r => Math.abs(r - Math.round(r)) < 0.001 ? Math.round(r) : r);
 }
 
 // --- Example Usage ---
@@ -535,10 +535,14 @@ function approximateEigenvalues(matrix: number[][]): number[] {
   for (let i = 0; i < n; i++) {
     const guess = startGuess + i - n/2; // Spread guesses around
     const eigenvalue = newtonRaphsonEigenvalue(matrix, guess);
-    if (eigenvalue !== null && !eigenvalues.includes(eigenvalue)) {
-      eigenvalues.push(eigenvalue);
-    }
-  }
+    if (eigenvalue !== null ) {
+    // Round eigenvalue if it's very close to a whole number or zero
+    const roundedEigenvalue = Math.abs(eigenvalue % 1) < 1e-4 || Math.abs(eigenvalue % 1) > 1 - 1e-4 
+      ? Math.round(eigenvalue) 
+      : eigenvalue;
+    eigenvalues.push(roundedEigenvalue);
+}
+}
   
   return eigenvalues.slice(0, n); // Return at most n eigenvalues
 }
