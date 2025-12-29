@@ -122,7 +122,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
         {renderMatrix()}
       </div>
 
-      {renderVertices()}
+      {/* {renderVertices()} */}
       
       <EigenvalueSolution matrix={matrix} onEigenspacesCalculated={handleEigenspacesCalculated} />
     </div>
