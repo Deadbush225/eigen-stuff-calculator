@@ -1,6 +1,116 @@
 import { create, all, type MathNode, type MathType, type Complex } from 'mathjs';
 const math = create(all);
 
+// Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
+type Polynomial = number[];
+
+/**
+ * Solves for real roots of a polynomial given its coefficients.
+ * Uses Newton-Raphson method with Synthetic Division deflation.
+ * @param inputCoeffs - [an, an-1, ..., a0] for an*x^n + ... + a0
+ * @returns Array of real roots
+ */
+export function solveRealRoots(inputCoeffs: Polynomial): number[] {
+    // Clone inputs to avoid mutating the original array
+    let coeffs = [...inputCoeffs];
+    const roots: number[] = [];
+    
+    // 1. Clean coefficients (remove leading zeros)
+    while (coeffs.length > 0 && coeffs[0] === 0) {
+        coeffs.shift();
+    }
+    
+    // Helper: Convert coeffs array to math.js expression string
+    // Example: [1, -3, 2] -> "(1 * x^2) + (-3 * x^1) + (2 * x^0)"
+    const coeffsToExpression = (c: Polynomial): string => {
+        const degree = c.length - 1;
+        const terms = c.map((val, idx) => {
+            if (val === 0) return '';
+            const power = degree - idx;
+            return `(${val} * x^${power})`;
+        }).filter(t => t !== '');
+        
+        return terms.length > 0 ? terms.join(' + ') : '0';
+    };
+
+    // Helper: Synthetic Division
+    // Divides polynomial 'poly' by (x - root) and returns the quotient polynomial
+    const deflate = (polyCoeffs: Polynomial, root: number): Polynomial => {
+        const newCoeffs: number[] = [];
+        let remainder = polyCoeffs[0];
+        newCoeffs.push(remainder);
+        
+        // We stop at length - 1 because the last result of synthetic division
+        // is the remainder (which we discard for the deflated polynomial)
+        for (let i = 1; i < polyCoeffs.length - 1; i++) {
+            remainder = polyCoeffs[i] + (remainder * root);
+            newCoeffs.push(remainder);
+        }
+        return newCoeffs;
+    };
+
+    // Recursive solver loop
+    while (coeffs.length > 1) {
+        // Optimization: Handle Linear Case directly (ax + b = 0)
+        // This prevents numerical instability for the final root
+        if (coeffs.length === 2) {
+            // Avoid -0 result
+            const root = coeffs[1] === 0 ? 0 : -coeffs[1] / coeffs[0];
+            roots.push(root);
+            break; 
+        }
+
+        // Setup Newton-Raphson using math.js
+        const exprStr = coeffsToExpression(coeffs);
+        
+        // Compile functions for efficiency
+        const f = math.compile(exprStr);
+        const fp = math.derivative(exprStr, 'x').compile();
+
+        let guess = Math.random() * 10 - 5; // Random guess between -5 and 5
+        let found = false;
+        
+        // Newton Loop (Max 1000 iterations)
+        for (let i = 0; i < 1000; i++) {
+            const y = f.evaluate({x: guess});
+            const dy = fp.evaluate({x: guess});
+
+            // Handle stationary points (derivative is 0)
+            if (Math.abs(dy) < 1e-7) {
+                guess = Math.random() * 10 - 5; // Restart with new guess
+                continue;
+            }
+
+            const newGuess = guess - (y / dy);
+
+            // Check for convergence
+            if (Math.abs(newGuess - guess) < 1e-7) {
+                roots.push(newGuess);
+                coeffs = deflate(coeffs, newGuess);
+                found = true;
+                break;
+            }
+            guess = newGuess;
+        }
+        
+        // Safety break: if we can't find a root (e.g., only complex roots left), stop.
+        if (!found) break;
+    }
+
+    // Sort and format results (rounding to 4 decimals)
+    return roots.sort((a, b) => a - b).map(r => math.round(r, 4) as number);
+}
+
+// --- Example Usage ---
+
+// Example 1: x^3 - 6x^2 + 11x - 6 (Roots: 1, 2, 3)
+const poly1: Polynomial = [1, -6, 11, -6];
+console.log("Poly 1 Roots:", solveRealRoots(poly1));
+
+// Example 2: x^4 - 10x^3 + 35x^2 - 50x + 24 (Roots: 1, 2, 3, 4)
+const poly2: Polynomial = [1, -10, 35, -50, 24];
+console.log("Poly 2 Roots:", solveRealRoots(poly2));
+
 /**
  * Manual Eigenvalue Calculator
  * Implements the complete mathematical approach for finding eigenvalues manually
@@ -196,72 +306,72 @@ function solveCharacteristicPolynomial(
         console.log("USING MATHJS POLY ROOT");
         console.log(coeff[3], coeff[2], coeff[1], coeff[0]);
         
-        // if n = 3, manually calculate the roots following cubic formula to find the roots
-        if (n === 3) {
-            const a = coeff[3] as number;
-            const b = coeff[2] as number;
-            const c = coeff[1] as number;
-            const d = coeff[0] as number;
+        // // if n = 3, manually calculate the roots following cubic formula to find the roots
+        // if (n === 3) {
+        //     const a = coeff[3] as number;
+        //     const b = coeff[2] as number;
+        //     const c = coeff[1] as number;
+        //     const d = coeff[0] as number;
 
-            // Cardano's method for solving cubic equations
-            const discriminant = 18 * a * b * c * d - 4 * b * b * b * d + b * b * c * c - 4 * a * c * c * c - 27 * a * a * d * d;
+        //     // Cardano's method for solving cubic equations
+        //     const discriminant = 18 * a * b * c * d - 4 * b * b * b * d + b * b * c * c - 4 * a * c * c * c - 27 * a * a * d * d;
 
-            // Use Cardano's method (handled with real and complex cases)
-            const roots: (number | Complex)[] = [];
+        //     // Use Cardano's method (handled with real and complex cases)
+        //     const roots: (number | Complex)[] = [];
 
-            // Normalize coefficients: x^3 + A x^2 + B x + C = 0
-            const A = b / a;
-            const B = c / a;
-            const C = d / a;
+        //     // Normalize coefficients: x^3 + A x^2 + B x + C = 0
+        //     const A = b / a;
+        //     const B = c / a;
+        //     const C = d / a;
 
-            // Compute intermediate values
-            const Q = (3 * B - A * A) / 9;
-            const R = (9 * A * B - 27 * C - 2 * A * A * A) / 54;
-            const Cardano_discriminant = Q * Q * Q + R * R; // Discriminant for depressed cubic
+        //     // Compute intermediate values
+        //     const Q = (3 * B - A * A) / 9;
+        //     const R = (9 * A * B - 27 * C - 2 * A * A * A) / 54;
+        //     const Cardano_discriminant = Q * Q * Q + R * R; // Discriminant for depressed cubic
 
-            if (Cardano_discriminant >= 0) {
-                // One real root and two complex conjugates (or all real with multiplicities)
-                const sqrtD = Math.sqrt(Cardano_discriminant);
-                const S = Math.cbrt(R + sqrtD);
-                const T = Math.cbrt(R - sqrtD);
+        //     if (Cardano_discriminant >= 0) {
+        //         // One real root and two complex conjugates (or all real with multiplicities)
+        //         const sqrtD = Math.sqrt(Cardano_discriminant);
+        //         const S = Math.cbrt(R + sqrtD);
+        //         const T = Math.cbrt(R - sqrtD);
 
-                const y1 = S + T;
-                const x1 = y1 - A / 3;
-                roots.push(Number.isFinite(x1) ? x1 : math.complex(x1, 0));
+        //         const y1 = S + T;
+        //         const x1 = y1 - A / 3;
+        //         roots.push(Number.isFinite(x1) ? x1 : math.complex(x1, 0));
 
-                // Complex conjugate pair
-                const realPart = -(S + T) / 2 - A / 3;
-                const imagPart = (S - T) * Math.sqrt(3) / 2;
-                roots.push(math.complex(realPart, imagPart));
-                roots.push(math.complex(realPart, -imagPart));
-            } else {
-                // Three distinct real roots
-                // const rho = Math.sqrt(-Q * Q * Q);
-                // Guard R / sqrt(-Q^3) in [-1,1] numerically
-                const cosArg = Math.max(-1, Math.min(1, R / Math.sqrt(-Q * Q * Q)));
-                const theta = Math.acos(cosArg);
+        //         // Complex conjugate pair
+        //         const realPart = -(S + T) / 2 - A / 3;
+        //         const imagPart = (S - T) * Math.sqrt(3) / 2;
+        //         roots.push(math.complex(realPart, imagPart));
+        //         roots.push(math.complex(realPart, -imagPart));
+        //     } else {
+        //         // Three distinct real roots
+        //         // const rho = Math.sqrt(-Q * Q * Q);
+        //         // Guard R / sqrt(-Q^3) in [-1,1] numerically
+        //         const cosArg = Math.max(-1, Math.min(1, R / Math.sqrt(-Q * Q * Q)));
+        //         const theta = Math.acos(cosArg);
 
-                const twoSqrtNegQ = 2 * Math.sqrt(-Q);
-                const y1 = twoSqrtNegQ * Math.cos(theta / 3);
-                const y2 = twoSqrtNegQ * Math.cos((theta + 2 * Math.PI) / 3);
-                const y3 = twoSqrtNegQ * Math.cos((theta + 4 * Math.PI) / 3);
+        //         const twoSqrtNegQ = 2 * Math.sqrt(-Q);
+        //         const y1 = twoSqrtNegQ * Math.cos(theta / 3);
+        //         const y2 = twoSqrtNegQ * Math.cos((theta + 2 * Math.PI) / 3);
+        //         const y3 = twoSqrtNegQ * Math.cos((theta + 4 * Math.PI) / 3);
 
-                roots.push(y1 - A / 3);
-                roots.push(y2 - A / 3);
-                roots.push(y3 - A / 3);
-            }
+        //         roots.push(y1 - A / 3);
+        //         roots.push(y2 - A / 3);
+        //         roots.push(y3 - A / 3);
+        //     }
             
-            console.log("Roots calculated via Cardano's method:", roots);
+        //     console.log("Roots calculated via Cardano's method:", roots);
 
-            return {
-                polynomial: `${determinantExpr.expression} = 0`,
-                eigenvalues: roots,
-            };
-        }
+        //     return {
+        //         polynomial: `${determinantExpr.expression} = 0`,
+        //         eigenvalues: roots,
+        //     };
+        // }
 
         return {
-            polynomial: `${determinantExpr.expression} = 0`,
-            eigenvalues: math.polynomialRoot(coeff[3], coeff[2], coeff[1], coeff[0]),
+            polynomial: `${determinantExpr.expression.toString()} = 0`,
+            eigenvalues: solveRealRoots(coeff.reverse() as number[]),
         };
     }
 
