@@ -1,3 +1,6 @@
+import React from 'react';
+import MathDisplay from '../components/util/MathDisplay';
+
 import { create, all, type MathNode, type MathType, type Complex } from 'mathjs';
 const math = create(all);
 
@@ -118,17 +121,17 @@ console.log("Poly 2 Roots:", solveRealRoots(poly2));
  */
 
 export interface EigenResult {
-  eigenvalues: number[];
+  eigenvalues: (number | Complex)[];
   characteristicPolynomial: string;
   xIMinusA: (string | number)[][];
   determinantExpression: string;
   trace: number;
   isReal: boolean;
   steps: {
-    step1_xIMinusA: string;
-    step2_determinant: string;
-    step3_polynomial: string;
-    step4_eigenvalues: string;
+    step1_xIMinusA: React.JSX.Element;
+    step2_determinant: React.JSX.Element;
+    step3_polynomial: React.JSX.Element;
+    step4_eigenvalues: React.JSX.Element;
   };
 }
 
@@ -627,6 +630,74 @@ function getMinor(matrix: number[][], row: number, col: number): number[][] {
 }
 
 /**
+ * Helper functions to format mathematical content for LaTeX display
+ */
+
+/**
+ * Format matrix for LaTeX display
+ */
+function formatMatrixLatex(matrix: (string | number)[][]): string {
+  const rows = matrix.map(row => 
+    row.map(cell => {
+      if (typeof cell === 'string') {
+        // Replace 'x' with proper LaTeX variable
+        return cell.replace(/x/g, '\\lambda');
+      }
+      return cell.toString();
+    }).join(' & ')
+  ).join(' \\\\ ');
+  
+  return `\\begin{bmatrix} ${rows} \\end{bmatrix}`;
+}
+
+/**
+ * Format expression for LaTeX display
+ */
+function formatExpressionLatex(expression: string): string {
+  return expression
+    .replace(/x/g, '\\lambda')
+    .replace(/\*/g, '\\cdot')
+    .replace(/\^(\d+)/g, '^{$1}')
+    .replace(/\(/g, '\\left(')
+    .replace(/\)/g, '\\right)');
+}
+
+/**
+ * Format polynomial for LaTeX display
+ */
+function formatPolynomialLatex(polynomial: string): string {
+  return polynomial
+    .replace(/x/g, '\\lambda')
+    .replace(/\^(\d+)/g, '^{$1}')
+    .replace(/\*/g, '\\cdot')
+    .replace(/= 0/g, '= 0');
+}
+
+/**
+ * Format eigenvalues for LaTeX display
+ */
+function formatEigenvaluesLatex(eigenvalues: (number | Complex)[]): string {
+  const formattedValues = eigenvalues.map(val => {
+    if (typeof val === 'number') {
+      return val.toFixed(4);
+    } else {
+      // Handle Complex numbers
+      const complex = val as Complex;
+      if (complex.im === 0) {
+        return complex.re.toFixed(4);
+      } else if (complex.re === 0) {
+        return `${complex.im.toFixed(4)}i`;
+      } else {
+        const sign = complex.im >= 0 ? '+' : '-';
+        return `${complex.re.toFixed(4)} ${sign} ${Math.abs(complex.im).toFixed(4)}i`;
+      }
+    }
+  });
+  
+  return `\\sigma(A) = \\{${formattedValues.join(', ')}\\}`;
+}
+
+/**
  * Calculate trace manually (sum of diagonal elements)
  */
 function calculateTraceManual(matrix: number[][]): number {
@@ -712,7 +783,9 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 }
 
   // Step 3: Solve characteristic polynomial
-  const polynomialResult = solveCharacteristicPolynomial(mathjsexp, inputMatrix);
+  const polynomialResult = mathjsexp ? 
+    solveCharacteristicPolynomial(mathjsexp, inputMatrix) :
+    { polynomial: `${determinantExpression} = 0`, eigenvalues: [] as (number | Complex)[] };
 //   const polynomialResult = solveCharacteristicPolynomial("", inputMatrix);
   // compare solution to mathjs
 //   try {
@@ -725,15 +798,28 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 
   // Additional calculations
   const trace = calculateTraceManual(inputMatrix);
-  const isReal = polynomialResult.eigenvalues.every((val: number) => 
+  const isReal = polynomialResult.eigenvalues.every((val: number | Complex) => 
     typeof val === 'number' && isFinite(val) && !isNaN(val)
   ) && polynomialResult.eigenvalues.length != 0;
   
+  
   const steps = {
-    step1_xIMinusA: `Step 1: Create xI - A matrix\n${xIMinusAString}`,
-    step2_determinant: `Step 2: Calculate det(xI - A)\n${determinantExpression}`,
-    step3_polynomial: `Step 3: Characteristic Polynomial\n${polynomialResult.polynomial}`,
-    step4_eigenvalues: `Step 4: Eigenvalues σ(A)\n[${polynomialResult.eigenvalues.join(', ')}]`
+    step1_xIMinusA: React.createElement('div', null, 
+      React.createElement('h4', null, 'Step 1: Create xI - A matrix'),
+      React.createElement(MathDisplay, { latex: formatMatrixLatex(xIMinusA), block: true })
+    ),
+    step2_determinant: React.createElement('div', null,
+      React.createElement('h4', null, 'Step 2: Calculate det(xI - A)'),
+      React.createElement(MathDisplay, { latex: `\\det(xI - A) = ${formatExpressionLatex(determinantExpression)}`, block: true })
+    ),
+    step3_polynomial: React.createElement('div', null,
+      React.createElement('h4', null, 'Step 3: Characteristic Polynomial'),
+      React.createElement(MathDisplay, { latex: formatPolynomialLatex(polynomialResult.polynomial), block: true })
+    ),
+    step4_eigenvalues: React.createElement('div', null,
+      React.createElement('h4', null, 'Step 4: Eigenvalues σ(A)'),
+      React.createElement(MathDisplay, { latex: formatEigenvaluesLatex(polynomialResult.eigenvalues), block: true })
+    )
   };
   
   return {
@@ -775,19 +861,24 @@ export function getCharacteristicEquation(inputMatrix: number[][]): string {
 /**
  * Helper function to display step-by-step solution
  */
-export function displayStepByStep(inputMatrix: number[][]): string {
+export function displayStepByStep(inputMatrix: number[][]): React.JSX.Element {
   const result = findEigenvalues(inputMatrix);
   
-  return [
+  return React.createElement('div', { className: 'eigenvalue-solution' },
     result.steps.step1_xIMinusA,
-    '',
     result.steps.step2_determinant,
-    '',
     result.steps.step3_polynomial,
-    '',
     result.steps.step4_eigenvalues,
-    '',
-    // `Trace: ${result.trace}`,
-    `All eigenvalues are real: ${result.isReal}`
-  ].join('\n');
+    React.createElement('div', { className: 'summary' },
+      React.createElement('h4', null, 'Summary'),
+      React.createElement(MathDisplay, { 
+        latex: `\\text{Trace}(A) = ${result.trace}`,
+        block: true 
+      }),
+      React.createElement(MathDisplay, { 
+        latex: `\\text{All eigenvalues are real: } ${result.isReal}`,
+        block: true 
+      })
+    )
+  );
 }

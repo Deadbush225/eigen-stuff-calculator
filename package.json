@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "katex": "^0.16.27",
     "mathbox": "^2.3.2-rc1",
     "mathjs": "^15.1.0",
     "react": "^19.2.0",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/katex": "^0.16.7",
     "@types/mathjs": "^9.4.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
