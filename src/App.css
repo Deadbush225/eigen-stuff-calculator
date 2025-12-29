@@ -45,3 +45,37 @@ h1,h2,h3,h4,h5,h6 {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: white;
 }
+
+.visualization-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 2px solid #646cff;
+  border-radius: 8px;
+  background-color: rgba(100, 108, 255, 0.1);
+}
+
+.visualization-section h2 {
+  margin-bottom: 1rem;
+  color: #646cff;
+}
+
+.visualization-section p {
+  text-align: left;
+  margin-bottom: 1rem;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.visualization-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.visualization-info p {
+  margin: 0;
+  color: #ccc;
+  font-style: italic;
+}

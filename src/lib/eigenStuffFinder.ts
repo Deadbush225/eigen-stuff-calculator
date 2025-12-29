@@ -1,3 +1,6 @@
+import { create, all, type MathNode, type MathType, type Complex } from 'mathjs';
+const math = create(all);
+
 /**
  * Manual Eigenvalue Calculator
  * Implements the complete mathematical approach for finding eigenvalues manually
@@ -107,7 +110,7 @@ function calculateTriangularDeterminant(matrix: (string | number)[][]): string {
   for (let i = 0; i < matrix.length; i++) {
     diagonal.push(`(${matrix[i][i]})`);
   }
-  return diagonal.join(' × ');
+  return diagonal.join(' * ');
 }
 
 /**
@@ -164,28 +167,104 @@ function calculateLargerDeterminant(matrix: (string | number)[][]): string {
  * Converts the determinant expression into a polynomial and finds roots
  */
 function solveCharacteristicPolynomial(
-  determinantExpr: string, 
+  determinantExpr: {
+    expression: MathNode | string;
+    variables: string[];
+    coefficients: MathType[];
+}, 
   inputMatrix: number[][]
-): { polynomial: string, eigenvalues: number[] } {
+): { polynomial: string, eigenvalues: (number|Complex)[] } {
   const n = inputMatrix.length;
+  const coeff = determinantExpr.coefficients as (number | Complex)[];
+//   if (n === 1) {
+//     // Linear case: x - a = 0 → x = a
+//     const eigenvalue = inputMatrix[0][0];
+//     return {
+//       polynomial: `x - ${eigenvalue} = 0`,
+//       eigenvalues: [eigenvalue]
+//     };
+//   }
   
-  if (n === 1) {
-    // Linear case: x - a = 0 → x = a
-    const eigenvalue = inputMatrix[0][0];
-    return {
-      polynomial: `x - ${eigenvalue} = 0`,
-      eigenvalues: [eigenvalue]
-    };
-  }
+//   if (n === 2) {
+//     return solve2x2Characteristic(inputMatrix);
+//   }
   
-  if (n === 2) {
-    return solve2x2Characteristic(inputMatrix);
-  }
-  
-  if (n === 3) {
-    return solve3x3Characteristic(inputMatrix, determinantExpr);
-  }
-  
+//   if (n === 3) {
+//     return solve3x3Characteristic(inputMatrix, determinantExpr);
+//   }
+    if ([1,2,3].includes(n)) {
+        console.log("USING MATHJS POLY ROOT");
+        console.log(coeff[3], coeff[2], coeff[1], coeff[0]);
+        
+        // if n = 3, manually calculate the roots following cubic formula to find the roots
+        if (n === 3) {
+            const a = coeff[3] as number;
+            const b = coeff[2] as number;
+            const c = coeff[1] as number;
+            const d = coeff[0] as number;
+
+            // Cardano's method for solving cubic equations
+            const discriminant = 18 * a * b * c * d - 4 * b * b * b * d + b * b * c * c - 4 * a * c * c * c - 27 * a * a * d * d;
+
+            // Use Cardano's method (handled with real and complex cases)
+            const roots: (number | Complex)[] = [];
+
+            // Normalize coefficients: x^3 + A x^2 + B x + C = 0
+            const A = b / a;
+            const B = c / a;
+            const C = d / a;
+
+            // Compute intermediate values
+            const Q = (3 * B - A * A) / 9;
+            const R = (9 * A * B - 27 * C - 2 * A * A * A) / 54;
+            const Cardano_discriminant = Q * Q * Q + R * R; // Discriminant for depressed cubic
+
+            if (Cardano_discriminant >= 0) {
+                // One real root and two complex conjugates (or all real with multiplicities)
+                const sqrtD = Math.sqrt(Cardano_discriminant);
+                const S = Math.cbrt(R + sqrtD);
+                const T = Math.cbrt(R - sqrtD);
+
+                const y1 = S + T;
+                const x1 = y1 - A / 3;
+                roots.push(Number.isFinite(x1) ? x1 : math.complex(x1, 0));
+
+                // Complex conjugate pair
+                const realPart = -(S + T) / 2 - A / 3;
+                const imagPart = (S - T) * Math.sqrt(3) / 2;
+                roots.push(math.complex(realPart, imagPart));
+                roots.push(math.complex(realPart, -imagPart));
+            } else {
+                // Three distinct real roots
+                // const rho = Math.sqrt(-Q * Q * Q);
+                // Guard R / sqrt(-Q^3) in [-1,1] numerically
+                const cosArg = Math.max(-1, Math.min(1, R / Math.sqrt(-Q * Q * Q)));
+                const theta = Math.acos(cosArg);
+
+                const twoSqrtNegQ = 2 * Math.sqrt(-Q);
+                const y1 = twoSqrtNegQ * Math.cos(theta / 3);
+                const y2 = twoSqrtNegQ * Math.cos((theta + 2 * Math.PI) / 3);
+                const y3 = twoSqrtNegQ * Math.cos((theta + 4 * Math.PI) / 3);
+
+                roots.push(y1 - A / 3);
+                roots.push(y2 - A / 3);
+                roots.push(y3 - A / 3);
+            }
+            
+            console.log("Roots calculated via Cardano's method:", roots);
+
+            return {
+                polynomial: `${determinantExpr.expression} = 0`,
+                eigenvalues: roots,
+            };
+        }
+
+        return {
+            polynomial: `${determinantExpr.expression} = 0`,
+            eigenvalues: math.polynomialRoot(coeff[3], coeff[2], coeff[1], coeff[0]),
+        };
+    }
+
   // For larger matrices, use numerical approach or special cases
   return {
     polynomial: `Characteristic polynomial: ${determinantExpr} = 0`,
@@ -502,14 +581,38 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   
   // Step 1: Create xI - A matrix
   const xIMinusA = createXIMinusAMatrix(inputMatrix);
+  console.log('xI - A matrix:', xIMinusA);
   const xIMinusAString = formatXIMinusAMatrix(xIMinusA);
+  console.log('xI - A matrix (formatted):', xIMinusAString);
   
   // Step 2: Calculate determinant expression
   const determinantExpression = calculateDeterminantExpression(xIMinusA);
+  console.log('Determinant expression: (Raw)', determinantExpression);
+
+  let mathjsexp;
   
+  try {
+      mathjsexp = math.rationalize(math.simplify(determinantExpression), {},true);
+      
+      console.log('Determinant expression: (Simplified)', mathjsexp.expression.toString());
+      console.log('Coefficients:', mathjsexp.coefficients);
+    } catch (e) {
+    console.error('Error occurred while simplifying determinant expression:', e);
+    // Cleanup or final steps if needed
+}
+
   // Step 3: Solve characteristic polynomial
-  const polynomialResult = solveCharacteristicPolynomial(determinantExpression, inputMatrix);
-  
+  const polynomialResult = solveCharacteristicPolynomial(mathjsexp, inputMatrix);
+//   const polynomialResult = solveCharacteristicPolynomial("", inputMatrix);
+  // compare solution to mathjs
+//   try {
+      const mathjsResult = math.eigs(inputMatrix);
+    console.log('Eigenvalues (mathjs):', mathjsResult.values);
+// } finally {
+      console.log('Eigenvalues (manual):', polynomialResult.eigenvalues);
+// }
+      
+
   // Additional calculations
   const trace = calculateTraceManual(inputMatrix);
   const isReal = polynomialResult.eigenvalues.every((val: number) => 

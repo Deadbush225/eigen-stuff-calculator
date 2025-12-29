@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import MatrixInput from './components/MatrixInput'
+import GraphAnimate from './components/GraphAnimate'
+import TransformationLegend from './components/TransformationLegend'
 import './App.css'
 
 function App() {
@@ -23,6 +25,25 @@ function App() {
             <summary>Raw Matrix Data (JSON)</summary>
             <pre>{JSON.stringify(matrix, null, 2)}</pre>
           </details>
+        </div>
+      )}
+
+      {matrix.length === 3 && matrix[0]?.length === 3 && (
+        <div className="visualization-section">
+          <h2>3D Matrix Transformation Visualization</h2>
+          <p>
+            This visualization shows how your 3×3 matrix transforms the coordinate space in ℝ³.
+            The thin lines represent the original basis vectors (e₁, e₂, e₃), 
+            and the thick lines show where they go after transformation (Ae₁, Ae₂, Ae₃).
+          </p>
+          <GraphAnimate transformationMatrix={matrix} />
+          <TransformationLegend transformationMatrix={matrix} />
+        </div>
+      )}
+      
+      {matrix.length > 0 && matrix.length !== 3 && (
+        <div className="visualization-info">
+          <p><em>3D visualization is only available for 3×3 matrices</em></p>
         </div>
       )}
     </div>
