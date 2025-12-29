@@ -107,11 +107,11 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
           <label htmlFor="matrix-size">Matrix Size (n×n): </label>
           <input
             id="matrix-size"
-            type="number"
+            // type="number"
             // min="2"
             // max="10"
-            value={size}
-            onChange={(e) => updateMatrixSize(parseInt(e.target.value) || 1)}
+            // value={size}
+            // onChange={(e) => updateMatrixSize(parseInt(e.target.value) || 1)}
             className="size-input"
           />
         </div>
@@ -120,6 +120,9 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
       <div className="matrix-section">
         <h3>Matrix ({size}×{size})</h3>
         {renderMatrix()}
+        <button className="apply-button" onClick={() => {
+            updateMatrixSize(parseInt(document.getElementById('matrix-size')?.value || '3'));
+        }}>Apply Matrix</button>
       </div>
 
       {/* {renderVertices()} */}

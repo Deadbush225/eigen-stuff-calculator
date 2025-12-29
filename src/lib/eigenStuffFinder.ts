@@ -243,12 +243,13 @@ function calculate2x2Determinant(matrix: (string | number)[][]): string {
 /**
  * Calculate 3x3 determinant using cofactor expansion along first row
  */
-function calculate3x3Determinant(matrix: (string | number)[][]): string {
+function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolean): string {
   const terms: string[] = [];
   
   for (let j = 0; j < 3; j++) {
     const element = matrix[0][j];
-    const sign = j % 2 === 0 ? '+' : '-';
+    let sign = j % 2 === 0 ? '+' : '-';
+    if (j === 0) sign = '';
     
     // Create 2x2 minor by removing row 0 and column j
     const minor: (string | number)[][] = [];
@@ -262,11 +263,18 @@ function calculate3x3Determinant(matrix: (string | number)[][]): string {
     }
     
     const minorDet = calculate2x2Determinant(minor);
-    const term = `${sign}(${element})(${minorDet})`;
+    let term = `${sign}(${element})\\Bigl[${minorDet}\\Bigr]`;
+    if (j != 2 && !asInner) {
+        term += `\\newline`;
+    }
     terms.push(term);
   }
   
   return terms.join(' ');
+}
+
+function splitLatexExpression(expr: string): string[] {
+    
 }
 
 /**
@@ -274,7 +282,32 @@ function calculate3x3Determinant(matrix: (string | number)[][]): string {
  */
 function calculateLargerDeterminant(matrix: (string | number)[][]): string {
   const n = matrix.length;
-  return `Determinant of ${n}×${n} matrix (expanded using cofactor method)`;
+
+    if (n === 4) {
+  const terms: string[] = [];
+
+        for (let j = 0; j < 4; j++) {
+            const element = matrix[0][j];
+            let sign = j % 2 === 0 ? '+' : '-';
+            if (j === 0) sign = '';
+            
+            // Create 2x2 minor by removing row 0 and column j
+            const minor: (string | number)[][] = [];
+            for (let i = 1; i < 4; i++) {
+                minor.push([]);
+                for (let k = 0; k < 4; k++) {
+                    if (k !== j) {
+                        minor[i - 1].push(matrix[i][k]);
+                    }
+                }
+            }
+
+            const minorDet = calculate3x3Determinant(minor, true);
+            const term = `${sign}(${element})\\biggl[${minorDet}\\biggr]\\newline`;
+            terms.push(term);
+        }
+        return terms.join(' ');
+    }
 }
 
 /**
@@ -595,8 +628,8 @@ function formatExpressionLatex(expression: string): string {
     .replace(/x/g, '\\lambda')
     .replace(/\*/g, '\\cdot')
     .replace(/\^(\d+)/g, '^{$1}')
-    .replace(/\(/g, '\\left(')
-    .replace(/\)/g, '\\right)');
+    // .replace(/\(/g, '\\left(')
+    // .replace(/\)/g, '\\right)');
 }
 
 /**
