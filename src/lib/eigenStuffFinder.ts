@@ -1,12 +1,12 @@
 import React from 'react';
 import MathDisplay from '../components/util/MathDisplay';
 
-import { create, all, type MathNode, type MathType, type Complex } from 'mathjs';
+import { create, all, type MathNode, type MathType, type Complex, exp } from 'mathjs';
 import { formatMatrix, nullSpaceBasis } from './matrixOperations';
 const math = create(all);
 
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
-type Polynomial = number[];
+type PolynomialCoefficients = number[];
 
 /**
  * Solves for real roots of a polynomial given its coefficients.
@@ -14,7 +14,7 @@ type Polynomial = number[];
  * @param inputCoeffs - [an, an-1, ..., a0] for an*x^n + ... + a0
  * @returns Array of real roots
  */
-export function solveRealRoots(inputCoeffs: Polynomial): number[] {
+export function solveRealRoots(inputCoeffs: PolynomialCoefficients): number[] {
     // Clone inputs to avoid mutating the original array
     let coeffs = [...inputCoeffs];
     const roots: number[] = [];
@@ -26,7 +26,7 @@ export function solveRealRoots(inputCoeffs: Polynomial): number[] {
     
     // Helper: Convert coeffs array to math.js expression string
     // Example: [1, -3, 2] -> "(1 * x^2) + (-3 * x^1) + (2 * x^0)"
-    const coeffsToExpression = (c: Polynomial): string => {
+    const coeffsToExpression = (c: PolynomialCoefficients): string => {
         const degree = c.length - 1;
         const terms = c.map((val, idx) => {
             if (val === 0) return '';
@@ -39,7 +39,7 @@ export function solveRealRoots(inputCoeffs: Polynomial): number[] {
 
     // Helper: Synthetic Division
     // Divides polynomial 'poly' by (x - root) and returns the quotient polynomial
-    const deflate = (polyCoeffs: Polynomial, root: number): Polynomial => {
+    const deflate = (polyCoeffs: PolynomialCoefficients, root: number): PolynomialCoefficients => {
         const newCoeffs: number[] = [];
         let remainder = polyCoeffs[0];
         newCoeffs.push(remainder);
@@ -108,11 +108,11 @@ export function solveRealRoots(inputCoeffs: Polynomial): number[] {
 // --- Example Usage ---
 
 // Example 1: x^3 - 6x^2 + 11x - 6 (Roots: 1, 2, 3)
-const poly1: Polynomial = [1, -6, 11, -6];
+const poly1: PolynomialCoefficients = [1, -6, 11, -6];
 console.log("Poly 1 Roots:", solveRealRoots(poly1));
 
 // Example 2: x^4 - 10x^3 + 35x^2 - 50x + 24 (Roots: 1, 2, 3, 4)
-const poly2: Polynomial = [1, -10, 35, -50, 24];
+const poly2: PolynomialCoefficients = [1, -10, 35, -50, 24];
 console.log("Poly 2 Roots:", solveRealRoots(poly2));
 
 /**
@@ -168,11 +168,18 @@ function createXIMinusAMatrix(inputMatrix: number[][]): (string | number)[][] {
   return result;
 }
 
+type LatexString = string;
+
+// type PolynomialEquation = {
+//     expression: string;
+//     latex: string;
+// }
+
 /**
  * Step 2: Calculate determinant manually to get characteristic polynomial
  * Manually implements determinant calculation for different matrix sizes
  */
-function calculateDeterminantExpression(xIMinusA: (string | number)[][]): string {
+function calculateDeterminantExpression(xIMinusA: (string | number)[][]): LatexString {
   const n = xIMinusA.length;
   
   // Check for special cases first
@@ -220,30 +227,30 @@ function isTriangularMatrix(matrix: (string | number)[][]): boolean {
 /**
  * Calculate determinant for triangular matrices (product of diagonal)
  */
-function calculateTriangularDeterminant(matrix: (string | number)[][]): string {
+function calculateTriangularDeterminant(matrix: (string | number)[][]): LatexString {
   const diagonal = [];
   for (let i = 0; i < matrix.length; i++) {
     diagonal.push(`(${matrix[i][i]})`);
   }
-  return diagonal.join(' * ');
+  return  diagonal.join(' \\cdot ');
 }
 
 /**
  * Calculate 2x2 determinant: (a)(d) - (b)(c)
  */
-function calculate2x2Determinant(matrix: (string | number)[][]): string {
+function calculate2x2Determinant(matrix: (string | number)[][]): LatexString {
   const a = matrix[0][0];
   const b = matrix[0][1];
   const c = matrix[1][0];
   const d = matrix[1][1];
-  
+
   return `(${a})(${d}) - (${b})(${c})`;
 }
 
 /**
  * Calculate 3x3 determinant using cofactor expansion along first row
  */
-function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolean): string {
+function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolean): LatexString {
   const terms: string[] = [];
   
   for (let j = 0; j < 3; j++) {
@@ -269,18 +276,14 @@ function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolea
     }
     terms.push(term);
   }
-  
-  return terms.join(' ');
-}
 
-function splitLatexExpression(expr: string): string[] {
-    
+  return terms.join(' ');
 }
 
 /**
  * For larger matrices, use cofactor expansion (simplified)
  */
-function calculateLargerDeterminant(matrix: (string | number)[][]): string {
+function calculateLargerDeterminant(matrix: (string | number)[][]): LatexString {
   const n = matrix.length;
 
     if (n === 4) {
@@ -308,6 +311,7 @@ function calculateLargerDeterminant(matrix: (string | number)[][]): string {
         }
         return terms.join(' ');
     }
+    return "Determinant calculation for matrices larger than 4x4 is not implemented.";
 }
 
 /**
@@ -632,6 +636,14 @@ function formatExpressionLatex(expression: string): string {
     // .replace(/\)/g, '\\right)');
 }
 
+function cleanExpressionLatex(expression: string): string {
+  const final = expression
+    .replace(/\\left/g, '')
+    .replace(/\\right/g, '').replace(/\\Bigl/g, '').replace(/\\Bigr/g, '').replace(/\\biggr/g, '').replace(/\\biggl/g, '').replace(/\\cdot/g, '*').replace(/\\lambda/g, 'x').replace(/\\newline/g, '').replace(/\[/g, '(').replace(/\]/g, ')');
+    console.log("CLEANED EXPRESSION:", final);
+    return final;
+}
+
 /**
  * Format polynomial for LaTeX display
  */
@@ -778,8 +790,10 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   let mathjsexp;
   
   try {
-      mathjsexp = math.rationalize(math.simplify(determinantExpression), {},true);
-      
+    const simplified = math.simplify(cleanExpressionLatex(determinantExpression))
+    console.log("SIMPLIFIED:", simplified.toString());
+      mathjsexp = math.rationalize(simplified, {},true);
+
       console.log('Determinant expression: (Simplified)', mathjsexp.expression.toString());
       console.log('Coefficients:', mathjsexp.coefficients);
     } catch (e) {
