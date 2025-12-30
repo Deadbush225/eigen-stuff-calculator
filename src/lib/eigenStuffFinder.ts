@@ -875,8 +875,9 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   
   
   const steps = {
-    step1_xIMinusA: React.createElement('div', null, 
+    step1_xIMinusA: React.createElement('div', null,
       React.createElement('h4', null, 'Step 1: Create xI - A matrix'),
+        
       React.createElement(MathDisplay, { latex: formatMatrixLatex(xIMinusA), block: true })
     ),
     step2_determinant: React.createElement('div', null,
@@ -936,7 +937,7 @@ export function getCharacteristicEquation(inputMatrix: number[][]): string {
 export function displayStepByStep(inputMatrix: number[][]): React.JSX.Element {
   const result = findEigenvalues(inputMatrix);
   
-  return React.createElement('div', { className: 'eigenvalue-solution' },
+  return React.createElement('div', { className: 'eigenvalue-solution card' },
     result.steps.step1_xIMinusA,
     result.steps.step2_determinant,
     result.steps.step3_polynomial,

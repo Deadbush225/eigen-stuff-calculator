@@ -3,7 +3,7 @@ export type hDirection = 'left' | 'right';
 // Extracted SVG line attributes for reusability
 export const SVG_LINE_ATTRIBUTES = {
     fill: "none",
-    stroke: "#000",
+    stroke: "#fff",
     strokeLinejoin: "miter" as const,
     strokeLinecap: "butt" as const,
     strokeWidth: 2,

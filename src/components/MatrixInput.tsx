@@ -56,7 +56,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
   const renderMatrix = () => (
     
 
-    <div className="container">
+    <div className="container card">
         <Bracket direction="left" height={size * 40} />
         <div className="matrix-grid" style={{ gridTemplateColumns: 
         `repeat(${size}, 1fr)` }}>

@@ -1,8 +1,14 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  /* max-width: 1280px; */
+  /* margin: 0 auto; */
+  /* padding: 2rem; */
+  width: 100%;
   text-align: center;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+}
+
+button:focus {
+  outline: none
 }
 
 .logo {
@@ -52,6 +58,7 @@ h1,h2,h3,h4,h5,h6 {
   border: 2px solid #646cff;
   border-radius: 8px;
   background-color: rgba(100, 108, 255, 0.1);
+  margin: 2.5em;
 }
 
 .visualization-section h2 {
@@ -81,5 +88,21 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .katex * {
-    color: black;
+    color: white;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Card ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(100, 108, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease; 
 }

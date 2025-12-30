@@ -20,6 +20,7 @@ const MathDisplay: React.FC<MathProps> = ({ latex, block = false }) => {
     <span 
       dangerouslySetInnerHTML={{ __html: html }} 
       style={{ display: block ? 'block' : 'inline', textAlign: block ? 'center' : 'left' }}
+      className={block ? 'math-highlight' : ''}
     />
   );
 };
