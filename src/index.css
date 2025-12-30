@@ -1,5 +1,6 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
+    font-family: "Sofia Pro", system-ui, Avenir, Helvetica, Arial, sans-serif !important;
   line-height: 1.5;
   font-weight: 400;
 
@@ -12,7 +13,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
+ * {
+    /* font-family: "Cubano", system-ui, Avenir, Helvetica, Arial, sans-serif !important; */
+ }
 a {
   font-weight: 500;
   color: #646cff;

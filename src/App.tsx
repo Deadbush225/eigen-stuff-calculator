@@ -36,7 +36,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Eigen Stuff Calculator</h1>
+      <h1>EIGEN STUFF CALCULATOR</h1>
       <MatrixInput onMatrixChange={handleMatrixChange} onEigenspacesChange={handleEigenspacesChange} />
       
       {/* {matrix.length > 0 && (

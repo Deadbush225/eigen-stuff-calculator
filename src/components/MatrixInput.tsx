@@ -69,7 +69,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                             key={`${rowIdx}-${col}`}
                             value={f_matrix[rowIdx]?.[col] ?? ''}
                             onChange={(e) => {
-                                f_matrix[rowIdx][col] = e.target.value;
+                                f_matrix[rowIdx][col] = f_matrix[rowIdx][col] == "0" ? parseFloat(e.target.value).toString() : e.target.value;
                                 if (!isNaN(parseFloat(e.target.value)) || e.target.value === '' || e.target.value === '-') {
                                     updateMatrixValue(rowIdx, col, e.target.value);
                                 
@@ -115,7 +115,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
   return (
     <div className="matrix-input-container">
       <div className="controls">
-        <h2>Matrix Input</h2>
+        <h2>MATRIX INPUT</h2>
         <div className="size-control">
           <label htmlFor="matrix-size">Matrix Size (n×n): </label>
           <input
