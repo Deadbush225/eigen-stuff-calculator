@@ -1,11 +1,17 @@
 import React from 'react';
 import './TransformationLegend.scss';
+import { type Eigenspace } from '../lib/eigen-types';
+import { type Complex } from 'mathjs';
 
 interface TransformationLegendProps {
   transformationMatrix: number[][];
+  eigenspaces?: Eigenspace[];
 }
 
-const TransformationLegend: React.FC<TransformationLegendProps> = ({ transformationMatrix }) => {
+const TransformationLegend: React.FC<TransformationLegendProps> = ({ 
+  transformationMatrix, 
+  eigenspaces = [] 
+}) => {
   // Calculate transformed basis vectors
   const e1_transformed = [
     transformationMatrix[0][0],
@@ -24,6 +30,42 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({ transformat
   ];
 
   const formatVector = (vec: number[]) => `[${vec.map(n => n.toFixed(2)).join(', ')}]`;
+  
+  const formatEigenvalue = (eigenvalue: number | Complex) => {
+    if (typeof eigenvalue === 'number') {
+      return eigenvalue.toFixed(3);
+    } else {
+      // Handle Complex numbers
+      const complex = eigenvalue as Complex;
+      if (complex.im === 0) {
+        return complex.re.toFixed(3);
+      } else if (complex.re === 0) {
+        return `${complex.im.toFixed(3)}i`;
+      } else {
+        const sign = complex.im >= 0 ? '+' : '-';
+        return `${complex.re.toFixed(3)} ${sign} ${Math.abs(complex.im).toFixed(3)}i`;
+      }
+    }
+  };
+
+  const getEigenspaceDimension = (eigenspace: Eigenspace) => {
+    return eigenspace.basis.length;
+  };
+
+  const getEigenspaceType = (dimension: number) => {
+    switch (dimension) {
+      case 0: return 'Zero space (no eigenvectors)';
+      case 1: return 'Line (1D eigenspace)';
+      case 2: return 'Plane (2D eigenspace)';
+      case 3: return 'Entire space (3D eigenspace)';
+      default: return `${dimension}D eigenspace`;
+    }
+  };
+
+  const getEigenspaceColor = (index: number) => {
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd'];
+    return colors[index % colors.length];
+  };
 
   return (
     <div className="transformation-legend">
@@ -67,6 +109,44 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({ transformat
         </div>
       </div>
 
+      {eigenspaces.length > 0 && (
+        <div className="legend-section">
+          <h4>Eigenspaces:</h4>
+          {eigenspaces.map((eigenspace, index) => {
+            const dimension = getEigenspaceDimension(eigenspace);
+            const eigenspaceType = getEigenspaceType(dimension);
+            const color = getEigenspaceColor(index);
+            
+            return (
+              <div key={index} className="eigenspace-row">
+                <div className="eigenspace-header">
+                  <div 
+                    className="eigenspace-color-indicator"
+                    style={{ backgroundColor: color }}
+                  ></div>
+                  <span className="eigenvalue-label">
+                    λ = {formatEigenvalue(eigenspace.eigenvalue)}
+                  </span>
+                  <span className="eigenspace-type">
+                    {eigenspaceType}
+                  </span>
+                </div>
+                <div className="eigenspace-basis">
+                  <span className="basis-label">Basis vectors:</span>
+                  <div className="basis-vectors">
+                    {eigenspace.basis.map((vector, vectorIndex) => (
+                      <div key={vectorIndex} className="basis-vector">
+                        {formatVector(vector.map(v => typeof v === 'number' ? v : parseFloat(v as string) || 0))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="legend-section">
         <h4>Visualization Key:</h4>
         <div className="legend-key">
@@ -90,6 +170,22 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({ transformat
             <div className="color-box grid-transformed"></div>
             <span>Transformed grids (colored)</span>
           </div>
+          {eigenspaces.length > 0 && (
+            <>
+              <div className="key-item">
+                <div className="color-box eigenspace-lines"></div>
+                <span>1D Eigenspaces (lines through origin)</span>
+              </div>
+              <div className="key-item">
+                <div className="color-box eigenspace-planes"></div>
+                <span>2D Eigenspaces (planes through origin)</span>
+              </div>
+              <div className="key-item">
+                <div className="color-box eigenspace-full"></div>
+                <span>3D Eigenspaces (entire space)</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

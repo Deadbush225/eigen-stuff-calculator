@@ -126,6 +126,93 @@
         background: linear-gradient(45deg, #ff6666 50%, #66ff66 50%);
         opacity: 0.6;
     }
+
+    &.eigenspace-lines {
+        background: linear-gradient(90deg, #ff6b6b 20%, #4ecdc4 20%, #4ecdc4 40%, #45b7d1 40%, #45b7d1 60%, #96ceb4 60%, #96ceb4 80%, #ffeaa7 80%);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    &.eigenspace-planes {
+        background: linear-gradient(45deg, #ff6b6b 25%, transparent 25%, transparent 75%, #4ecdc4 75%),
+                    linear-gradient(-45deg, #45b7d1 25%, transparent 25%, transparent 75%, #96ceb4 75%);
+        opacity: 0.8;
+    }
+
+    &.eigenspace-full {
+        background: radial-gradient(circle, #ffeaa7 30%, #dda0dd 70%);
+        opacity: 0.6;
+    }
+}
+
+// Eigenspace legend styles
+.eigenspace-row {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.eigenspace-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.eigenspace-color-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.eigenvalue-label {
+    font-weight: bold;
+    color: #646cff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    min-width: 4rem;
+}
+
+.eigenspace-type {
+    color: #ffffff;
+    font-style: italic;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.eigenspace-basis {
+    margin-left: 2rem;
+}
+
+.basis-label {
+    color: #cccccc;
+    font-size: 0.85rem;
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+.basis-vectors {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.basis-vector {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    display: inline-block;
+    max-width: fit-content;
 }
 
 @media (max-width: 768px) {
@@ -138,5 +225,20 @@
 
     .legend-key {
         grid-template-columns: 1fr;
+    }
+
+    .eigenspace-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+    }
+
+    .eigenspace-basis {
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+
+    .basis-vectors {
+        gap: 0.3rem;
     }
 }

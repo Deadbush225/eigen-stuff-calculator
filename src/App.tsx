@@ -45,7 +45,7 @@ function App() {
             Eigenspaces are visualized as colored lines (1D) or planes (2D) with their corresponding eigenvalue labels.
           </p>
           <GraphAnimate transformationMatrix={matrix} eigenspaces={basisVectors} />
-          <TransformationLegend transformationMatrix={matrix} />
+          <TransformationLegend transformationMatrix={matrix} eigenspaces={basisVectors} />
         </div>
       )}
       

@@ -78,7 +78,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                             className="matrix-cell"
                         step="0.1"
                     />
-                )})};
+                )})}
             </div>
         ))}
         </div>
@@ -140,9 +140,9 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
       <div className="matrix-section">
         <h3>Matrix ({size}×{size})</h3>
         {renderMatrix()}
-        <button className="apply-button" onClick={() => {
+        {/* <button className="apply-button" onClick={() => {
             updateMatrixSize(parseInt(document.getElementById('matrix-size')?.value || '3'));
-        }}>Apply Matrix</button>
+        }}>Apply Matrix</button> */}
       </div>
 
       {/* {renderVertices()} */}
