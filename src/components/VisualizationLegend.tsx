@@ -1,5 +1,5 @@
 import React from 'react';
-import './TransformationLegend.scss';
+import './VisualizationLegend.scss';
 import { type Eigenspace } from '../lib/eigen-types';
 import { type Complex } from 'mathjs';
 

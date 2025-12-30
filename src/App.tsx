@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import MatrixInput from './components/MatrixInput'
 import GraphAnimate from './components/GraphAnimate'
-import TransformationLegend from './components/TransformationLegend'
+import TransformationLegend from './components/VisualizationLegend'
 import './App.css'
 import { type Eigenspace } from './lib/eigen-types';
 
