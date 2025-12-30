@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { use, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { mathBox } from 'mathbox';
@@ -21,6 +21,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
   eigenspaces = []
 }) => {
   const containerRef = useRef(null);
+//   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     // Determine matrix dimensions and create appropriate transformation
@@ -46,11 +47,31 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
       ];
     }
 
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('webgl2', {
+      alpha: true,
+      antialias: true,
+      depth: true,
+      stencil: true
+    });
+
+    if (context !== null) {
+        console.log('WebGL2 context found');
+        // return;
+    }
+
+    // if (!canvasRef.current) {
+    //     console.log('Canvas not found'); return; }
+
     // 1. Initialize MathBox
     const mathbox = mathBox({
       element: containerRef.current,
       plugins: ['core', 'controls', 'cursor', 'mathbox'],
       controls: { klass: OrbitControls },
+      renderer: {
+        canvas: canvas, // Use the canvas from the return statement
+        context: context,
+      },
     });
 
     const three = mathbox.three;
@@ -698,7 +719,12 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
     <div 
       ref={containerRef} 
       style={{ width: '100%', height: '500px', overflow: 'hidden' }} 
-    />
+    >
+        {/* <canvas 
+        ref={canvasRef} 
+        style={{ display: 'block', width: '100%', height: '100%' }} 
+      /> */}
+    </div>
   );
 };
 
