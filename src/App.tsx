@@ -19,6 +19,21 @@ function App() {
     console.log('Eigenspaces updated:', newEigenspaces);
   };
 
+  const textLabel: {
+    [key: number]: {[key: string]: string};
+  } = {
+    2: {
+    dimension: "2D",
+    dimension_formula: "ℝ²",
+      basis_vector: "e₁, e₂"
+    },
+    3: {
+      dimension: "3D",
+      dimension_formula: "ℝ³",
+      basis_vector: "e₁, e₂, e₃"
+    }
+  }
+
   return (
     <div className="App">
       <h1>Eigen Stuff Calculator</h1>
@@ -35,13 +50,13 @@ function App() {
         </div>
       )} */}
 
-      {matrix.length === 3 && matrix[0]?.length === 3 && (
+      {[2, 3].includes(matrix.length) && (
         <div className="visualization-section">
-          <h2>3D Matrix Transformation Visualization</h2>
+          <h2>{textLabel[matrix.length].dimension} Matrix Transformation Visualization</h2>
           <p>
-            This visualization shows how your 3×3 matrix transforms the coordinate space in ℝ³.
-            The thin lines represent the original basis vectors (e₁, e₂, e₃), 
-            and the thick lines show where they go after transformation (Ae₁, Ae₂, Ae₃).
+            This visualization shows how your {matrix.length}×{matrix[0]?.length || 0} matrix transforms the coordinate space in {textLabel[matrix.length].dimension_formula}.
+            The thin lines represent the original basis vectors ({textLabel[matrix.length].basis_vector}), 
+            and the thick lines show where they go after transformation (A{textLabel[matrix.length].basis_vector}).
             Eigenspaces are visualized as colored lines (1D) or planes (2D) with their corresponding eigenvalue labels.
           </p>
           <GraphAnimate transformationMatrix={matrix} eigenspaces={basisVectors} />
@@ -49,9 +64,9 @@ function App() {
         </div>
       )}
       
-      {matrix.length > 0 && matrix.length !== 3 && (
+      {matrix.length > 0 && ![2, 3].includes(matrix.length) && (
         <div className="visualization-info">
-          <p><em>3D visualization is only available for 3×3 matrices</em></p>
+          <p><em>Visualization is only available for 2×2 and 3×3 matrices</em></p>
         </div>
       )}
     </div>

@@ -13,21 +13,37 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({
   eigenspaces = [] 
 }) => {
   // Calculate transformed basis vectors
-  const e1_transformed = [
-    transformationMatrix[0][0],
-    transformationMatrix[1][0],
-    transformationMatrix[2][0]
-  ];
-  const e2_transformed = [
-    transformationMatrix[0][1],
-    transformationMatrix[1][1],
-    transformationMatrix[2][1]
-  ];
-  const e3_transformed = [
-    transformationMatrix[0][2],
-    transformationMatrix[1][2],
-    transformationMatrix[2][2]
-  ];
+  let e1_transformed : number[] = [];
+  let e2_transformed : number[] = [];
+  let e3_transformed : number[] = [];
+
+  console.log("Transformation Matrix:",transformationMatrix);
+  if (transformationMatrix.length === 3) {
+    e1_transformed = [
+      transformationMatrix[0][0],
+      transformationMatrix[1][0],
+      transformationMatrix[2][0]
+    ];
+    e2_transformed = [
+      transformationMatrix[0][1],
+      transformationMatrix[1][1],
+      transformationMatrix[2][1]
+    ];
+    e3_transformed = [
+      transformationMatrix[0][2],
+      transformationMatrix[1][2],
+      transformationMatrix[2][2]
+    ];
+  } else if (transformationMatrix.length === 2) {
+    e1_transformed = [
+      transformationMatrix[0][0],
+      transformationMatrix[1][0]
+    ];
+    e2_transformed = [
+      transformationMatrix[0][1],
+      transformationMatrix[1][1]
+    ];
+  }
 
   const formatVector = (vec: number[]) => `[${vec.map(n => n.toFixed(2)).join(', ')}]`;
   
@@ -84,11 +100,12 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({
           <span className="vector-value">[0, 1, 0]</span>
           <span className="vector-description">→ Unit vector along Y-axis</span>
         </div>
+        {transformationMatrix.length === 3 && (
         <div className="basis-vector-row">
           <span className="vector-label e3-original">e₃</span>
           <span className="vector-value">[0, 0, 1]</span>
           <span className="vector-description">→ Unit vector along Z-axis</span>
-        </div>
+        </div>)}
       </div>
 
       <div className="legend-section">
@@ -103,11 +120,13 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({
           <span className="vector-value">{formatVector(e2_transformed)}</span>
           <span className="vector-description">→ Second column of A</span>
         </div>
-        <div className="basis-vector-row">
-          <span className="vector-label e3-transformed">Ae₃</span>
-          <span className="vector-value">{formatVector(e3_transformed)}</span>
-          <span className="vector-description">→ Third column of A</span>
-        </div>
+        {transformationMatrix.length === 3 && (
+          <div className="basis-vector-row">
+            <span className="vector-label e3-transformed">Ae₃</span>
+            <span className="vector-value">{formatVector(e3_transformed)}</span>
+            <span className="vector-description">→ Third column of A</span>
+          </div>
+        )}
       </div>
 
       </div>
