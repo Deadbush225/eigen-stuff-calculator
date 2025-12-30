@@ -24,7 +24,7 @@ function App() {
       <h1>Eigen Stuff Calculator</h1>
       <MatrixInput onMatrixChange={handleMatrixChange} onEigenspacesChange={handleEigenspacesChange} />
       
-      {matrix.length > 0 && (
+      {/* {matrix.length > 0 && (
         <div className="matrix-info">
           <h2>Matrix Information</h2>
           <p>Current matrix size: {matrix.length}×{matrix[0]?.length || 0}</p>
@@ -33,7 +33,7 @@ function App() {
             <pre>{JSON.stringify(matrix, null, 2)}</pre>
           </details>
         </div>
-      )}
+      )} */}
 
       {matrix.length === 3 && matrix[0]?.length === 3 && (
         <div className="visualization-section">

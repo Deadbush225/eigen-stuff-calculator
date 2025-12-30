@@ -70,7 +70,8 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({
   return (
     <div className="transformation-legend">
       <h3>Basis Vector Transformations</h3>
-      
+      <div className="transformation-group">
+
       <div className="legend-section">
         <h4>Original Elementary Basis Vectors:</h4>
         <div className="basis-vector-row">
@@ -109,9 +110,12 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({
         </div>
       </div>
 
+      </div>
+
       {eigenspaces.length > 0 && (
         <div className="legend-section">
-          <h4>Eigenspaces:</h4>
+          <h3>Eigenspaces:</h3>
+          <div className="eigenspace-list">
           {eigenspaces.map((eigenspace, index) => {
             const dimension = getEigenspaceDimension(eigenspace);
             const eigenspaceType = getEigenspaceType(dimension);
@@ -145,8 +149,10 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({
             );
           })}
         </div>
-      )}
+          </div>
 
+      )}
+    
       <div className="legend-section">
         <h4>Visualization Key:</h4>
         <div className="legend-key">

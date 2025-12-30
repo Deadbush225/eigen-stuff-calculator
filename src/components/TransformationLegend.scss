@@ -1,16 +1,16 @@
+h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #646cff !important;
+    font-size: 1.2rem;
+}
+
 .transformation-legend {
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
     padding: 1.5rem;
     margin-top: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
-
-    h3 {
-        margin-top: 0;
-        margin-bottom: 1.5rem;
-        color: #646cff;
-        font-size: 1.2rem;
-    }
 
     h4 {
         margin-bottom: 0.8rem;
@@ -26,10 +26,6 @@
 
 .legend-section {
     margin-bottom: 1.5rem;
-
-    &:last-child {
-        margin-bottom: 0;
-    }
 }
 
 .basis-vector-row {
@@ -38,6 +34,11 @@
     gap: 1rem;
     margin-bottom: 0.5rem;
     padding: 0.3rem 0;
+}
+
+.transformation-group {
+    display: flex;
+    justify-content: space-around;
 }
 
 .vector-label {
@@ -134,7 +135,7 @@
 
     &.eigenspace-planes {
         background: linear-gradient(45deg, #ff6b6b 25%, transparent 25%, transparent 75%, #4ecdc4 75%),
-                    linear-gradient(-45deg, #45b7d1 25%, transparent 25%, transparent 75%, #96ceb4 75%);
+            linear-gradient(-45deg, #45b7d1 25%, transparent 25%, transparent 75%, #96ceb4 75%);
         opacity: 0.8;
     }
 
@@ -151,10 +152,13 @@
     background-color: rgba(255, 255, 255, 0.02);
     border-radius: 6px;
     border-left: 3px solid transparent;
+}
 
-    &:last-child {
-        margin-bottom: 0;
-    }
+.eigenspace-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1em;
 }
 
 .eigenspace-header {
@@ -188,7 +192,11 @@
 }
 
 .eigenspace-basis {
-    margin-left: 2rem;
+    // margin-left: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
 }
 
 .basis-label {

@@ -220,9 +220,9 @@ function calculateDeterminantExpression(xIMinusA: (string | number)[][]): LatexS
   const n = xIMinusA.length;
   
   // Check for special cases first
-//   if (isTriangularMatrix(xIMinusA)) {
-    // return calculateTriangularDeterminant(xIMinusA);
-//   }
+  if (isTriangularMatrix(xIMinusA)) {
+    return calculateTriangularDeterminant(xIMinusA);
+  }
   
   switch (n) {
     case 1:
