@@ -24,6 +24,7 @@ function App() {
 
   const handleSectionChange = (section: 'calculator' | 'about') => {
     setActiveSection(section);
+    window.scrollTo(0, 0);
   };
 
   const textLabel: {

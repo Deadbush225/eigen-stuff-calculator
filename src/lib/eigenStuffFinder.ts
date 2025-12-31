@@ -945,13 +945,13 @@ export function displayStepByStep(inputMatrix: number[][]): React.JSX.Element {
     React.createElement('div', { className: 'summary' },
       React.createElement('h4', null, 'Summary'),
       React.createElement(MathDisplay, { 
-        latex: `\\text{Trace}(A) = ${result.trace}`,
-        block: true 
-      }),
-      React.createElement(MathDisplay, { 
         latex: `\\text{All eigenvalues are real: } ${result.isReal}`,
         block: true 
-      })
+      }),
+    //   React.createElement(MathDisplay, { 
+        // latex: ``,
+        // block: true 
+    //   })
     )
   );
 }

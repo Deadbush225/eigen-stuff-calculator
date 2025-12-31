@@ -89,6 +89,14 @@
     text-align: center;
 }
 
+@media screen and (max-width: 600px) {
+    .math-highlight {
+        padding: 0;
+        margin: 0;
+    }
+
+}
+
 .features-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -384,8 +392,4 @@
 
 .about-section:nth-child(even) {
     animation-delay: 0.1s;
-}
-
-.about-section:nth-child(odd) {
-    animation-delay: 0.2s;
 }
