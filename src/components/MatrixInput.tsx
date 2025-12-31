@@ -53,6 +53,8 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
     return matrix.map(row => row[colIndex]);
   };
 
+  onMatrixChange?.(matrix);
+
   const renderMatrix = () => (
     
 

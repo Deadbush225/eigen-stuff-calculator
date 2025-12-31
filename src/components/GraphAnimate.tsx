@@ -1,8 +1,6 @@
-import React, { use, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { mathBox } from 'mathbox';
-import 'mathbox/mathbox.css';
 import { type Complex } from 'mathjs';
 
 import { type Eigenspace } from '../lib/eigen-types';
@@ -20,274 +18,220 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
   ], 
   eigenspaces = []
 }) => {
-  const containerRef = useRef(null);
-//   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Store reference to container for cleanup
+    const container = containerRef.current;
+
     // Determine matrix dimensions and create appropriate transformation
     const matrixSize = transformationMatrix.length;
     const is2D = matrixSize === 2;
     
-    // For 2x2 matrices, embed in 3D space (XY plane, Z=0)
-    let matrix4x4: number[];
-    if (is2D) {
-      matrix4x4 = [
-        transformationMatrix[0][0], transformationMatrix[0][1], 0, 0,
-        transformationMatrix[1][0], transformationMatrix[1][1], 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      ];
-    } else {
-      // 3x3 matrix to 4x4 homogeneous matrix
-      matrix4x4 = [
-        transformationMatrix[0][0], transformationMatrix[0][1], transformationMatrix[0][2], 0,
-        transformationMatrix[1][0], transformationMatrix[1][1], transformationMatrix[1][2], 0,
-        transformationMatrix[2][0], transformationMatrix[2][1], transformationMatrix[2][2], 0,
-        0, 0, 0, 1
-      ];
-    }
+    // Create Three.js scene with WebGL renderer
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
 
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('webgl2', {
-      alpha: true,
-      antialias: true,
-      depth: true,
-      stencil: true
-    });
-
-    if (context !== null) {
-        console.log('WebGL2 context found');
-        // return;
-    }
-
-    // if (!canvasRef.current) {
-    //     console.log('Canvas not found'); return; }
-
-    // 1. Initialize MathBox
-    const mathbox = mathBox({
-      element: containerRef.current,
-      plugins: ['core', 'controls', 'cursor', 'mathbox'],
-      controls: { klass: OrbitControls },
-      renderer: {
-        canvas: canvas, // Use the canvas from the return statement
-        context: context,
-      },
-    });
-
-    const three = mathbox.three;
-    three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
+    // Setup camera
+    const camera = new THREE.PerspectiveCamera(
+      75, 
+      container.clientWidth / container.clientHeight, 
+      0.1, 
+      1000
+    );
     
-    // Adjust camera for 2D vs 3D visualization
     if (is2D) {
-      mathbox.camera({ proxy: true, position: [0, 0, 8] }); // Top-down view for 2D
+      camera.position.set(0, 0, 8); // Top-down view for 2D
     } else {
-      mathbox.camera({ proxy: true, position: [3, 2, 5] }); // Angled view for 3D
+      camera.position.set(3, 2, 5); // Angled view for 3D
     }
+    camera.lookAt(0, 0, 0);
 
-    // 2. Create the view
-    const view = mathbox.cartesian({
-      range: [[-5, 5], [-5, 5], [-5, 5]],
-      scale: [1, 1, 1],
+    // Create WebGL renderer with conservative settings for Android
+    const isAndroidNonFirefox = /Android/i.test(navigator.userAgent) && !/Firefox/i.test(navigator.userAgent);
+    
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isAndroidNonFirefox,
+      alpha: true,
+      powerPreference: isAndroidNonFirefox ? 'default' : 'high-performance',
+      preserveDrawingBuffer: isAndroidNonFirefox,
+    });
+    
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isAndroidNonFirefox ? 2 : 3));
+    
+    // Disable advanced features on Android for better compatibility
+    if (isAndroidNonFirefox) {
+      renderer.shadowMap.enabled = false;
+    }
+    
+    container.appendChild(renderer.domElement);
+
+    // Setup orbit controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = !isAndroidNonFirefox;
+    controls.dampingFactor = 0.1;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+    controls.enableRotate = true;
+
+    // Create materials
+    const lineMaterial = (color: number, linewidth: number = 1) => new THREE.LineBasicMaterial({ 
+      color: color,
+      linewidth: isAndroidNonFirefox ? Math.max(linewidth, 2) : linewidth
+    });
+    
+    const pointMaterial = (color: number, size: number = 1) => new THREE.PointsMaterial({ 
+      color: color, 
+      size: isAndroidNonFirefox ? size * 1.5 : size,
+      sizeAttenuation: false 
     });
 
-    // 3. Draw coordinate axes
+    // Helper function to create line geometry
+    const createLine = (points: number[][], color: number, linewidth: number = 1) => {
+      const geometry = new THREE.BufferGeometry().setFromPoints(
+        points.map(p => new THREE.Vector3(p[0], p[1], p[2]))
+      );
+      const line = new THREE.Line(geometry, lineMaterial(color, linewidth));
+      return line;
+    };
+
+    // Helper function to create points
+    const createPoints = (points: number[][], color: number, size: number = 1) => {
+      const geometry = new THREE.BufferGeometry().setFromPoints(
+        points.map(p => new THREE.Vector3(p[0], p[1], p[2]))
+      );
+      const pointsObj = new THREE.Points(geometry, pointMaterial(color, size));
+      return pointsObj;
+    };
+
+    // Helper function to create text labels with constant screen size
+    const createTextLabel = (text: string, position: THREE.Vector3, color: number = 0x000000) => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d')!;
+      canvas.width = 512;
+      canvas.height = 256;
+      
+      // Clear canvas with transparent background
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Add semi-transparent background for better visibility
+    //   context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    //   context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Set up text styling
+      context.fillStyle = `#${color.toString(16).padStart(6, '0')}`;
+      context.font = `bold ${isAndroidNonFirefox ? 48 : 64}px Arial`;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      
+      // Add white stroke for better visibility
+      context.strokeStyle = '#ffffff';
+      context.lineWidth = 4;
+      context.strokeText(text, canvas.width / 2, canvas.height / 2);
+      
+      // Fill the text
+      context.fillText(text, canvas.width / 2, canvas.height / 2);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      const material = new THREE.SpriteMaterial({ 
+        map: texture,
+        sizeAttenuation: false // This makes the sprite maintain constant screen size
+      });
+      const sprite = new THREE.Sprite(material);
+      sprite.position.copy(position);
+      
+      // Make text labels much bigger
+      const screenScale = isAndroidNonFirefox ? 0.4 : 0.5;
+      sprite.scale.set(screenScale, screenScale * 0.5, 1);
+      
+      return sprite;
+    };
+
+    // 1. Draw coordinate axes
+    const axisLength = 5;
+    const axisLineWidth = isAndroidNonFirefox ? 5 : 3;
+    
     // X-axis (red)
-    view.array({
-      data: [[-5, 0, 0], [5, 0, 0]],
-      channels: 3,
-    }).line({
-      color: '#ff0000',
-      width: 3,
-    });
-
-    // Y-axis (green)
-    view.array({
-      data: [[0, -5, 0], [0, 5, 0]],
-      channels: 3,
-    }).line({
-      color: '#00ff00',
-      width: 3,
-    });
-
+    scene.add(createLine([[-axisLength, 0, 0], [axisLength, 0, 0]], 0xff0000, axisLineWidth));
+    scene.add(createTextLabel('X', new THREE.Vector3(5.5, 0.5, 0), 0xff0000));
+    
+    // Y-axis (green)  
+    scene.add(createLine([[0, -axisLength, 0], [0, axisLength, 0]], 0x00ff00, axisLineWidth));
+    scene.add(createTextLabel('Y', new THREE.Vector3(0, 6, 0), 0x00ff00));
+    
     // Z-axis (blue) - only for 3D
     if (!is2D) {
-      view.array({
-        data: [[0, 0, -5], [0, 0, 5]],
-        channels: 3,
-      }).line({
-        color: '#0000ff',
-        width: 3,
+      scene.add(createLine([[0, 0, -axisLength], [0, 0, axisLength]], 0x0000ff, axisLineWidth));
+      scene.add(createTextLabel('Z', new THREE.Vector3(0, 0.5, 5.5), 0x0000ff));
+    }
+
+    // 2. Draw grid
+    const gridSize = 10;
+    const gridStep = 1;
+    const gridLines = [];
+    
+    // XY plane grid (light gray)
+    for (let i = -gridSize/2; i <= gridSize/2; i++) {
+      if (i !== 0) { // Don't draw over axes
+        gridLines.push([[-gridSize/2, i * gridStep, 0], [gridSize/2, i * gridStep, 0]]);
+        gridLines.push([[i * gridStep, -gridSize/2, 0], [i * gridStep, gridSize/2, 0]]);
+      }
+    }
+    
+    gridLines.forEach(line => {
+      scene.add(createLine(line, 0xcccccc, 1));
+    });
+    
+    // Additional grids for 3D (lighter and fewer lines for performance)
+    if (!is2D && !isAndroidNonFirefox) {
+      const additionalGridLines = [];
+      
+      // XZ plane
+      for (let i = -gridSize/4; i <= gridSize/4; i += 2) {
+        if (i !== 0) {
+          additionalGridLines.push([[-gridSize/2, 0, i * gridStep], [gridSize/2, 0, i * gridStep]]);
+          additionalGridLines.push([[i * gridStep, 0, -gridSize/2], [i * gridStep, 0, gridSize/2]]);
+        }
+      }
+      
+      // YZ plane
+      for (let i = -gridSize/4; i <= gridSize/4; i += 2) {
+        if (i !== 0) {
+          additionalGridLines.push([[0, -gridSize/2, i * gridStep], [0, gridSize/2, i * gridStep]]);
+          additionalGridLines.push([[0, i * gridStep, -gridSize/2], [0, i * gridStep, gridSize/2]]);
+        }
+      }
+      
+      additionalGridLines.forEach(line => {
+        scene.add(createLine(line, 0xdddddd, 1));
       });
     }
 
-    // Add axis labels
-    view.array({
-      data: [[5.5, 0.5, 0]],
-      channels: 3,
-    }).text({
-      data: ['X'],
-    }).label({
-      color: '#ff0000',
-      size: 16,
-    });
-
-    view.array({
-      data: [[0, 6, 0]],
-      channels: 3,
-    }).text({
-      data: ['Y'],
-    }).label({
-      color: '#00ff00',
-      size: 16,
-    });
-
-    // Z-axis label - only for 3D
+    // 3. Draw elementary basis vectors (original)
+    const basisLineWidth = isAndroidNonFirefox ? 8 : 6;
+    const pointSize = isAndroidNonFirefox ? 12 : 8;
+    
+    // e1 = [1, 0, 0] - unit vector along X (red)
+    scene.add(createLine([[0, 0, 0], [1, 0, 0]], 0xcc0000, basisLineWidth));
+    scene.add(createPoints([[1, 0, 0]], 0xcc0000, pointSize));
+    scene.add(createTextLabel('e₁', new THREE.Vector3(1.1, 0.1, 0), 0xcc0000));
+    
+    // e2 = [0, 1, 0] - unit vector along Y (green)
+    scene.add(createLine([[0, 0, 0], [0, 1, 0]], 0x00cc00, basisLineWidth));
+    scene.add(createPoints([[0, 1, 0]], 0x00cc00, pointSize));
+    scene.add(createTextLabel('e₂', new THREE.Vector3(0.1, 1.1, 0), 0x00cc00));
+    
+    // e3 = [0, 0, 1] - unit vector along Z (blue) - only for 3D
     if (!is2D) {
-      view.array({
-        data: [[0, 0.5, 5.5]],
-        channels: 3,
-      }).text({
-        data: ['Z'],
-      }).label({
-        color: '#0000ff',
-        size: 16,
-      });
+      scene.add(createLine([[0, 0, 0], [0, 0, 1]], 0x0000cc, basisLineWidth));
+      scene.add(createPoints([[0, 0, 1]], 0x0000cc, pointSize));
+      scene.add(createTextLabel('e₃', new THREE.Vector3(0.1, 0, 1.1), 0x0000cc));
     }
 
-    // 4. Draw grids
-    if (is2D) {
-      // For 2D: Only draw XY plane grid (more prominent)
-      view.grid({
-        axes: [1, 2], // x and y axes
-        width: 1,
-        divideX: 10,
-        divideY: 10,
-        color: '#cccccc',
-        opacity: 0.5,
-      });
-    } else {
-      // For 3D: Draw all three grid planes
-      // XY plane (z=0)
-      view.grid({
-        axes: [1, 2], // x and y axes
-        width: 1,
-        divideX: 10,
-        divideY: 10,
-        color: '#cccccc',
-        opacity: 0.3,
-      });
-
-      // XZ plane (y=0)
-      view.grid({
-        axes: [1, 3], // x and z axes
-        width: 1,
-        divideX: 10,
-        divideY: 10,
-        color: '#cccccc',
-        opacity: 0.2,
-      });
-
-      // YZ plane (x=0)
-      view.grid({
-        axes: [2, 3], // y and z axes
-        width: 1,
-        divideX: 10,
-        divideY: 10,
-        color: '#cccccc',
-        opacity: 0.2,
-      });
-    }
-
-    // 5. Draw elementary basis vectors (original)
-    // e1 = [1, 0, 0] - unit vector along X (red arrow)
-    view.array({
-      data: [[0, 0, 0], [1, 0, 0]],
-      channels: 3,
-    }).line({
-      color: '#cc0000',
-      width: 6,
-    });
-    view.array({
-      data: [[1, 0, 0]],
-      channels: 3,
-    }).point({
-      color: '#cc0000',
-      size: 8,
-    });
-
-    // e2 = [0, 1, 0] - unit vector along Y (green arrow)
-    view.array({
-      data: [[0, 0, 0], [0, 1, 0]],
-      channels: 3,
-    }).line({
-      color: '#00cc00',
-      width: 6,
-    });
-    view.array({
-      data: [[0, 1, 0]],
-      channels: 3,
-    }).point({
-      color: '#00cc00',
-      size: 8,
-    });
-
-    // e3 = [0, 0, 1] - unit vector along Z (blue arrow) - only for 3D
-    if (!is2D) {
-      view.array({
-        data: [[0, 0, 0], [0, 0, 1]],
-        channels: 3,
-      }).line({
-        color: '#0000cc',
-        width: 6,
-      });
-      view.array({
-        data: [[0, 0, 1]],
-        channels: 3,
-      }).point({
-        color: '#0000cc',
-        size: 8,
-      });
-    }
-
-    // Add labels for original basis vectors
-    view.array({
-      data: [[1.1, 0.1, 0]],
-      channels: 3,
-    }).text({
-      data: ['e₁'],
-    }).label({
-      color: '#cc0000',
-      size: 12,
-    });
-
-    view.array({
-      data: [[0.1, 1.1, 0]],
-      channels: 3,
-    }).text({
-      data: ['e₂'],
-    }).label({
-      color: '#00cc00',
-      size: 12,
-    });
-
-    // e3 label - only for 3D
-    if (!is2D) {
-      view.array({
-        data: [[0.1, 0, 1.1]],
-        channels: 3,
-      }).text({
-        data: ['e₃'],
-      }).label({
-        color: '#0000cc',
-        size: 12,
-      });
-    }
-
-    // 6. Draw Transformed coordinate system and grids
-    // Apply transformation matrix
-    const transformedView = view.transform({ matrix: matrix4x4 });
-
-    // Calculate transformed basis vectors for visualization
+    // 4. Calculate transformed basis vectors
     let e1_transformed: number[], e2_transformed: number[], e3_transformed: number[];
     
     if (is2D) {
@@ -320,161 +264,88 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
       ];
     }
 
-    // Draw transformed elementary basis vectors (thick arrows)
+    // 5. Draw transformed elementary basis vectors (thick arrows)
+    const transformedLineWidth = isAndroidNonFirefox ? 12 : 10;
+    const transformedPointSize = isAndroidNonFirefox ? 16 : 12;
+    
     // Transformed e1 (red)
-    view.array({
-      data: [[0, 0, 0], e1_transformed],
-      channels: 3,
-    }).line({
-      color: '#ff4444',
-      width: 10,
-    });
-    view.array({
-      data: [e1_transformed],
-      channels: 3,
-    }).point({
-      color: '#ff4444',
-      size: 12,
-    });
-
+    scene.add(createLine([[0, 0, 0], e1_transformed], 0xff4444, transformedLineWidth));
+    scene.add(createPoints([e1_transformed], 0xff4444, transformedPointSize));
+    scene.add(createTextLabel('Ae₁', new THREE.Vector3(e1_transformed[0] + 0.1, e1_transformed[1] + 0.1, e1_transformed[2] + 0.1), 0xff4444));
+    
     // Transformed e2 (green)
-    view.array({
-      data: [[0, 0, 0], e2_transformed],
-      channels: 3,
-    }).line({
-      color: '#44ff44',
-      width: 10,
-    });
-    view.array({
-      data: [e2_transformed],
-      channels: 3,
-    }).point({
-      color: '#44ff44',
-      size: 12,
-    });
-
+    scene.add(createLine([[0, 0, 0], e2_transformed], 0x44ff44, transformedLineWidth));
+    scene.add(createPoints([e2_transformed], 0x44ff44, transformedPointSize));
+    scene.add(createTextLabel('Ae₂', new THREE.Vector3(e2_transformed[0] + 0.1, e2_transformed[1] + 0.1, e2_transformed[2] + 0.1), 0x44ff44));
+    
     // Transformed e3 (blue) - only for 3D
     if (!is2D) {
-      view.array({
-        data: [[0, 0, 0], e3_transformed],
-        channels: 3,
-      }).line({
-        color: '#4444ff',
-        width: 10,
-      });
-      view.array({
-        data: [e3_transformed],
-        channels: 3,
-      }).point({
-        color: '#4444ff',
-        size: 12,
-      });
+      scene.add(createLine([[0, 0, 0], e3_transformed], 0x4444ff, transformedLineWidth));
+      scene.add(createPoints([e3_transformed], 0x4444ff, transformedPointSize));
+      scene.add(createTextLabel('Ae₃', new THREE.Vector3(e3_transformed[0] + 0.1, e3_transformed[1] + 0.1, e3_transformed[2] + 0.1), 0x4444ff));
     }
 
-    // Add labels for transformed basis vectors
-    view.array({
-      data: [[e1_transformed[0] + 0.1, e1_transformed[1] + 0.1, e1_transformed[2] + 0.1]],
-      channels: 3,
-    }).text({
-      data: ['Ae₁'],
-    }).label({
-      color: '#ff4444',
-      size: 12,
-    });
-
-    view.array({
-      data: [[e2_transformed[0] + 0.1, e2_transformed[1] + 0.1, e2_transformed[2] + 0.1]],
-      channels: 3,
-    }).text({
-      data: ['Ae₂'],
-    }).label({
-      color: '#44ff44',
-      size: 12,
-    });
-
-    // Ae3 label - only for 3D
+    // 6. Draw transformed coordinate axes (lighter colors)
+    const transformedAxisWidth = isAndroidNonFirefox ? 6 : 4;
+    
+    // Apply transformation matrix to create transformed axes
+    const transformAxis = (axis: number[]) => {
+      if (is2D) {
+        return [
+          axis[0] * transformationMatrix[0][0] + axis[1] * transformationMatrix[0][1],
+          axis[0] * transformationMatrix[1][0] + axis[1] * transformationMatrix[1][1],
+          axis[2]
+        ];
+      } else {
+        return [
+          axis[0] * transformationMatrix[0][0] + axis[1] * transformationMatrix[0][1] + axis[2] * transformationMatrix[0][2],
+          axis[0] * transformationMatrix[1][0] + axis[1] * transformationMatrix[1][1] + axis[2] * transformationMatrix[1][2],
+          axis[0] * transformationMatrix[2][0] + axis[1] * transformationMatrix[2][1] + axis[2] * transformationMatrix[2][2]
+        ];
+      }
+    };
+    
+    // Transformed X-axis
+    const transformedXStart = transformAxis([-axisLength, 0, 0]);
+    const transformedXEnd = transformAxis([axisLength, 0, 0]);
+    scene.add(createLine([transformedXStart, transformedXEnd], 0xff6666, transformedAxisWidth));
+    
+    // Transformed Y-axis
+    const transformedYStart = transformAxis([0, -axisLength, 0]);
+    const transformedYEnd = transformAxis([0, axisLength, 0]);
+    scene.add(createLine([transformedYStart, transformedYEnd], 0x66ff66, transformedAxisWidth));
+    
+    // Transformed Z-axis - only for 3D
     if (!is2D) {
-      view.array({
-        data: [[e3_transformed[0] + 0.1, e3_transformed[1] + 0.1, e3_transformed[2] + 0.1]],
-        channels: 3,
-      }).text({
-        data: ['Ae₃'],
-      }).label({
-        color: '#4444ff',
-        size: 12,
+      const transformedZStart = transformAxis([0, 0, -axisLength]);
+      const transformedZEnd = transformAxis([0, 0, axisLength]);
+      scene.add(createLine([transformedZStart, transformedZEnd], 0x6666ff, transformedAxisWidth));
+    }
+
+    // 7. Draw transformed grid (fewer lines for performance)
+    if (!isAndroidNonFirefox) { // Skip on Android for performance
+      const transformedGridLines = [];
+      const gridDensity = 2; // Sparser grid for performance
+      
+      for (let i = -gridSize/2; i <= gridSize/2; i += gridDensity) {
+        if (i !== 0) {
+          // XY plane grid lines
+          const line1Start = transformAxis([-gridSize/2, i * gridStep, 0]);
+          const line1End = transformAxis([gridSize/2, i * gridStep, 0]);
+          transformedGridLines.push([line1Start, line1End]);
+          
+          const line2Start = transformAxis([i * gridStep, -gridSize/2, 0]);
+          const line2End = transformAxis([i * gridStep, gridSize/2, 0]);
+          transformedGridLines.push([line2Start, line2End]);
+        }
+      }
+      
+      transformedGridLines.forEach(line => {
+        scene.add(createLine(line, 0xff9999, 1)); // Light red for transformed grid
       });
     }
 
-    // 7. Draw transformed coordinate axes (full range)
-    transformedView.array({
-      data: [[-5, 0, 0], [5, 0, 0]],
-      channels: 3,
-    }).line({
-      color: '#ff6666',
-      width: 4,
-    });
-
-    transformedView.array({
-      data: [[0, -5, 0], [0, 5, 0]],
-      channels: 3,
-    }).line({
-      color: '#66ff66',
-      width: 4,
-    });
-
-    // Z-axis for transformed view - only for 3D
-    if (!is2D) {
-      transformedView.array({
-        data: [[0, 0, -5], [0, 0, 5]],
-        channels: 3,
-      }).line({
-        color: '#6666ff',
-        width: 4,
-      });
-    }
-
-    // Transformed grids
-    if (is2D) {
-      // For 2D: Only draw XY plane grid (more prominent)
-      transformedView.grid({
-        axes: [1, 2], // XY plane
-        width: 2,
-        divideX: 10,
-        divideY: 10,
-        color: '#ff6666',
-        opacity: 0.7,
-      });
-    } else {
-      // For 3D: Draw all three grid planes
-      transformedView.grid({
-        axes: [1, 2], // XY plane
-        width: 2,
-        divideX: 10,
-        divideY: 10,
-        color: '#ff6666',
-        opacity: 0.6,
-      });
-
-      transformedView.grid({
-        axes: [1, 3], // ZX plane
-        width: 2,
-        divideX: 10,
-        divideY: 10,
-        color: '#6666ff',
-        opacity: 0.4,
-      });
-
-      transformedView.grid({
-        axes: [2, 3], // YZ plane
-        width: 2,
-        divideX: 10,
-        divideY: 10,
-        color: '#66ff66',
-        opacity: 0.4,
-      });
-    }
-
-    // Draw eigenspaces 
+    // 8. Draw eigenspaces using Three.js
     if (eigenspaces && eigenspaces.length > 0) {
       const eigenspaceColors = ['#af00af', '#00afaf', '#afaf00', '#ff8000', '#8000ff'];
       
@@ -489,6 +360,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
         }
         
         const color = eigenspaceColors[index % eigenspaceColors.length];
+        const colorHex = parseInt(color.replace('#', ''), 16);
         const eigenvalue = typeof eigenspace.eigenvalue === 'number' 
           ? eigenspace.eigenvalue.toFixed(3)
           : `${(eigenspace.eigenvalue as Complex).re.toFixed(3)}+${(eigenspace.eigenvalue as Complex).im.toFixed(3)}i`;
@@ -519,47 +391,28 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
           const scaleFactor = magnitude > 0 ? 3 / magnitude : 1;
           const scaledVector = workingVector.map(x => x * scaleFactor);
           
+          const eigenLineWidth = isAndroidNonFirefox ? 10 : 8;
+          const eigenVectorWidth = isAndroidNonFirefox ? 14 : 12;
+          const eigenPointSize = isAndroidNonFirefox ? 18 : 16;
+          
           // Draw eigenspace line (both directions)
-          view.array({
-            data: [
-              [-scaledVector[0]*2, -scaledVector[1]*2, -scaledVector[2]*2],
-              [scaledVector[0]*2, scaledVector[1]*2, scaledVector[2]*2]
-            ],
-            channels: 3,
-          }).line({
-            color: color,
-            width: 8,
-            opacity: 0.8,
-          });
+          scene.add(createLine([
+            [-scaledVector[0]*2, -scaledVector[1]*2, -scaledVector[2]*2],
+            [scaledVector[0]*2, scaledVector[1]*2, scaledVector[2]*2]
+          ], colorHex, eigenLineWidth));
           
           // Draw eigenvector arrow
-          view.array({
-            data: [[0, 0, 0], scaledVector],
-            channels: 3,
-          }).line({
-            color: color,
-            width: 12,
-          });
+          scene.add(createLine([[0, 0, 0], scaledVector], colorHex, eigenVectorWidth));
           
           // Draw arrowhead (point)
-          view.array({
-            data: [scaledVector],
-            channels: 3,
-          }).point({
-            color: color,
-            size: 16,
-          });
+          scene.add(createPoints([scaledVector], colorHex, eigenPointSize));
           
           // Add eigenvalue label
-          view.array({
-            data: [[scaledVector[0] + 0.3, scaledVector[1] + 0.3, scaledVector[2] + 0.3]],
-            channels: 3,
-          }).text({
-            data: [`λ=${eigenvalue}`],
-          }).label({
-            color: color,
-            size: 14,
-          });
+          scene.add(createTextLabel(
+            `λ=${eigenvalue}`, 
+            new THREE.Vector3(scaledVector[0] + 0.3, scaledVector[1] + 0.3, scaledVector[2] + 0.3), 
+            colorHex
+          ));
           
         } else if (dimension === 2) {
           // 2D eigenspace: Draw as a plane using two basis vectors
@@ -578,8 +431,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
             workingV2 = v2.length >= 3 ? v2 : [0, 1, 0];
           }
           
-          // Create a grid of points to represent the plane
-          const gridSize = 5;
+          // Create a grid of points to represent the plane (sparser for Android)
+          const gridSize = isAndroidNonFirefox ? 3 : 5;
           const gridPoints: number[][] = [];
           
           for (let i = -gridSize; i <= gridSize; i++) {
@@ -596,40 +449,17 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
           }
           
           // Draw the plane as a grid of points
-          view.array({
-            data: gridPoints,
-            channels: 3,
-          }).point({
-            color: color,
-            size: 4,
-            opacity: 0.6,
-          });
+          scene.add(createPoints(gridPoints, colorHex, 4));
+          
+          const basisVectorWidth = isAndroidNonFirefox ? 10 : 8;
+          const basisPointSize = isAndroidNonFirefox ? 14 : 12;
           
           // Draw the two basis vectors
-          view.array({
-            data: [[0, 0, 0], workingV1],
-            channels: 3,
-          }).line({
-            color: color,
-            width: 8,
-          });
-          
-          view.array({
-            data: [[0, 0, 0], workingV2],
-            channels: 3,
-          }).line({
-            color: color,
-            width: 8,
-          });
+          scene.add(createLine([[0, 0, 0], workingV1], colorHex, basisVectorWidth));
+          scene.add(createLine([[0, 0, 0], workingV2], colorHex, basisVectorWidth));
           
           // Draw basis vector endpoints
-          view.array({
-            data: [workingV1, workingV2],
-            channels: 3,
-          }).point({
-            color: color,
-            size: 12,
-          });
+          scene.add(createPoints([workingV1, workingV2], colorHex, basisPointSize));
           
           // Add eigenvalue label
           const midpoint = [
@@ -638,80 +468,139 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
             (workingV1[2] + workingV2[2]) / 2 + 0.3
           ];
           
-          view.array({
-            data: [midpoint],
-            channels: 3,
-          }).text({
-            data: [`λ=${eigenvalue}`],
-          }).label({
-            color: color,
-            size: 14,
-          });
+          scene.add(createTextLabel(
+            `λ=${eigenvalue}`, 
+            new THREE.Vector3(midpoint[0], midpoint[1], midpoint[2]), 
+            colorHex
+          ));
           
         } else if (dimension === 3 || (dimension === 2 && is2D)) {
           // 3D eigenspace or full 2D space: The entire space (rare case, usually for λI)
-          // Draw coordinate planes with eigenspace color
+          // Create a special visualization for full-space eigenspaces
           if (is2D) {
-            // For 2D: highlight the entire XY plane
-            view.grid({
-              axes: [1, 2],
-              color: color,
-              opacity: 0.4,
-              width: 3,
+            // For 2D: highlight the entire XY plane with a grid pattern
+            const fullSpaceGridLines = [];
+            for (let i = -axisLength; i <= axisLength; i += 0.5) {
+              if (i !== 0) {
+                fullSpaceGridLines.push([[-axisLength, i, 0], [axisLength, i, 0]]);
+                fullSpaceGridLines.push([[i, -axisLength, 0], [i, axisLength, 0]]);
+              }
+            }
+            
+            fullSpaceGridLines.forEach(line => {
+              scene.add(createLine(line, colorHex, 2));
             });
             
             // Add label at a visible location
-            view.array({
-              data: [[2, 2, 0]],
-              channels: 3,
-            }).text({
-              data: [`λ=${eigenvalue} (ℝ²)`],
-            }).label({
-              color: color,
-              size: 16,
-            });
+            scene.add(createTextLabel(
+              `λ=${eigenvalue} (ℝ²)`, 
+              new THREE.Vector3(2, 2, 0), 
+              colorHex
+            ));
           } else {
-            // For 3D: highlight all coordinate planes
-            view.grid({
-              axes: [1, 2],
-              color: color,
-              opacity: 0.3,
-              width: 3,
-            });
+            // For 3D: Create wireframe-style visualization
+            const fullSpace3DLines = [];
             
-            view.grid({
-              axes: [1, 3],
-              color: color,
-              opacity: 0.2,
-              width: 3,
-            });
+            // XY plane lines
+            for (let i = -2; i <= 2; i += 1) {
+              fullSpace3DLines.push([[-2, i, 0], [2, i, 0]]);
+              fullSpace3DLines.push([[i, -2, 0], [i, 2, 0]]);
+            }
             
-            view.grid({
-              axes: [2, 3],
-              color: color,
-              opacity: 0.2,
-              width: 3,
+            // XZ plane lines  
+            for (let i = -2; i <= 2; i += 1) {
+              fullSpace3DLines.push([[-2, 0, i], [2, 0, i]]);
+              fullSpace3DLines.push([[i, 0, -2], [i, 0, 2]]);
+            }
+            
+            // YZ plane lines
+            for (let i = -2; i <= 2; i += 1) {
+              fullSpace3DLines.push([[0, -2, i], [0, 2, i]]);
+              fullSpace3DLines.push([[0, i, -2], [0, i, 2]]);
+            }
+            
+            fullSpace3DLines.forEach(line => {
+              scene.add(createLine(line, colorHex, 2));
             });
             
             // Add label at origin
-            view.array({
-              data: [[1, 1, 1]],
-              channels: 3,
-            }).text({
-              data: [`λ=${eigenvalue} (ℝ³)`],
-            }).label({
-              color: color,
-              size: 16,
-            });
+            scene.add(createTextLabel(
+              `λ=${eigenvalue} (ℝ³)`, 
+              new THREE.Vector3(1, 1, 1), 
+              colorHex
+            ));
           }
         }
       });
     }
-    
 
-    // Cleanup on unmount
+    // Animation and render loop
+    let animationFrameId: number;
+    
+    const animate = () => {
+      animationFrameId = requestAnimationFrame(animate);
+      
+      // Update controls
+      controls.update();
+      
+      // Render the scene
+      renderer.render(scene, camera);
+    };
+    
+    // Start the animation loop
+    animate();
+    
+    // Handle window resize
+    const handleResize = () => {
+      if (!container) return;
+      
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
+    
+    window.addEventListener('resize', handleResize);
+
+    // 9. Cleanup function
     return () => {
-      three.destroy();
+      // Cancel animation frame
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      
+      // Remove event listeners
+      window.removeEventListener('resize', handleResize);
+      
+      // Dispose of controls
+      controls.dispose();
+      
+      // Remove renderer from DOM
+      if (container && renderer.domElement.parentNode) {
+        container.removeChild(renderer.domElement);
+      }
+      
+      if (renderer) {
+        renderer.dispose();
+      }
+      if (scene) {
+        // Dispose of all geometries and materials
+        scene.traverse((object: THREE.Object3D) => {
+          if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points) {
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+              if (Array.isArray(object.material)) {
+                object.material.forEach(material => material.dispose());
+              } else {
+                object.material.dispose();
+              }
+            }
+          }
+        });
+        scene.clear();
+      }
     };
   }, [transformationMatrix, eigenspaces]);
 
@@ -719,12 +608,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
     <div 
       ref={containerRef} 
       style={{ width: '100%', height: '500px', overflow: 'hidden' }} 
-    >
-        {/* <canvas 
-        ref={canvasRef} 
-        style={{ display: 'block', width: '100%', height: '100%' }} 
-      /> */}
-    </div>
+    />
   );
 };
 
