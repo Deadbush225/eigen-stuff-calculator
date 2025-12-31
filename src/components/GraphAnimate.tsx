@@ -45,9 +45,14 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
     if (is2D) {
       camera.position.set(0, 0, 8); // Top-down view for 2D
     } else {
-      camera.position.set(3, 2, 5); // Angled view for 3D
+      camera.position.set(3, 3, 5); // Angled view for 3D with Z as upright axis
     }
     camera.lookAt(0, 0, 0);
+    
+    // Set camera up vector to make Z upright in 3D
+    if (!is2D) {
+      camera.up.set(0, 0, 1); // Z is the up direction
+    }
 
     // Create WebGL renderer with conservative settings for Android
     const isAndroidNonFirefox = /Android/i.test(navigator.userAgent) && !/Firefox/i.test(navigator.userAgent);
@@ -163,16 +168,16 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
     
     // X-axis (red)
     scene.add(createLine([[-axisLength, 0, 0], [axisLength, 0, 0]], 0xff0000, axisLineWidth));
-    scene.add(createTextLabel('X', new THREE.Vector3(5.5, 0.5, 0), 0xff0000));
+    scene.add(createTextLabel('X', new THREE.Vector3(5.5, 0, 0), 0xff0000));
     
     // Y-axis (green)  
     scene.add(createLine([[0, -axisLength, 0], [0, axisLength, 0]], 0x00ff00, axisLineWidth));
-    scene.add(createTextLabel('Y', new THREE.Vector3(0, 6, 0), 0x00ff00));
+    scene.add(createTextLabel('Y', new THREE.Vector3(0, 5.5, 0), 0x00ff00));
     
     // Z-axis (blue) - only for 3D
     if (!is2D) {
       scene.add(createLine([[0, 0, -axisLength], [0, 0, axisLength]], 0x0000ff, axisLineWidth));
-      scene.add(createTextLabel('Z', new THREE.Vector3(0, 0.5, 5.5), 0x0000ff));
+      scene.add(createTextLabel('Z', new THREE.Vector3(0, 0, 5.5), 0x0000ff));
     }
 
     // 2. Draw grid
@@ -442,8 +447,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
           const gridSize = isAndroidNonFirefox ? 3 : 5;
           const gridPoints: number[][] = [];
           
-          for (let i = -gridSize; i <= gridSize; i++) {
-            for (let j = -gridSize; j <= gridSize; j++) {
+          for (let i = -gridSize * 2; i <= gridSize * 2; i++) {
+            for (let j = -gridSize * 2; j <= gridSize * 2; j++) {
               const s = i * 0.5;
               const t = j * 0.5;
               const point = [
