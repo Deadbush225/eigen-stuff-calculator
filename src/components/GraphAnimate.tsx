@@ -94,7 +94,9 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
       const geometry = new THREE.BufferGeometry().setFromPoints(
         points.map(p => new THREE.Vector3(p[0], p[1], p[2]))
       );
-      const line = new THREE.Line(geometry, lineMaterial(color, linewidth));
+    const line = new THREE.Line(geometry, lineMaterial(color, linewidth));
+    line.material.transparent = true;
+    line.material.opacity = 0.5;
       return line;
     };
 
@@ -115,7 +117,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
       canvas.height = 256;
       
       // Clear canvas with transparent background
-      context.clearRect(0, 0, canvas.width, canvas.height);
+    //   context.clearRect(0, 0, canvas.width, canvas.height);
       
       // Add semi-transparent background for better visibility
     //   context.fillStyle = 'rgba(255, 255, 255, 0.8)';
@@ -138,10 +140,15 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
       const texture = new THREE.CanvasTexture(canvas);
       const material = new THREE.SpriteMaterial({ 
         map: texture,
-        sizeAttenuation: false // This makes the sprite maintain constant screen size
+        sizeAttenuation: false, // This makes the sprite maintain constant screen size
+        transparent: true,
+        alphaTest: 0.1, // Prevents z-fighting issues
+        depthTest: false, // Disable depth testing to prevent flickering
+        depthWrite: false // Don't write to depth buffer
       });
       const sprite = new THREE.Sprite(material);
       sprite.position.copy(position);
+      sprite.renderOrder = 1000; // Render labels on top of everything else
       
       // Make text labels much bigger
       const screenScale = isAndroidNonFirefox ? 0.4 : 0.5;
@@ -190,7 +197,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
       const additionalGridLines = [];
       
       // XZ plane
-      for (let i = -gridSize/4; i <= gridSize/4; i += 2) {
+      for (let i = -gridSize/2; i <= gridSize/2; i++) {
         if (i !== 0) {
           additionalGridLines.push([[-gridSize/2, 0, i * gridStep], [gridSize/2, 0, i * gridStep]]);
           additionalGridLines.push([[i * gridStep, 0, -gridSize/2], [i * gridStep, 0, gridSize/2]]);
@@ -198,7 +205,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
       }
       
       // YZ plane
-      for (let i = -gridSize/4; i <= gridSize/4; i += 2) {
+      for (let i = -gridSize/2; i <= gridSize/2; i++) {
         if (i !== 0) {
           additionalGridLines.push([[0, -gridSize/2, i * gridStep], [0, gridSize/2, i * gridStep]]);
           additionalGridLines.push([[0, i * gridStep, -gridSize/2], [0, i * gridStep, gridSize/2]]);
@@ -500,27 +507,27 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
           } else {
             // For 3D: Create wireframe-style visualization
             const fullSpace3DLines = [];
-            
+            const range = 5;
             // XY plane lines
-            for (let i = -2; i <= 2; i += 1) {
-              fullSpace3DLines.push([[-2, i, 0], [2, i, 0]]);
-              fullSpace3DLines.push([[i, -2, 0], [i, 2, 0]]);
+            for (let i = -range; i <= range; i += 1) {
+              fullSpace3DLines.push([[-range, i, 0], [range, i, 0]]);
+              fullSpace3DLines.push([[i, -range, 0], [i, range, 0]]);
             }
             
             // XZ plane lines  
-            for (let i = -2; i <= 2; i += 1) {
-              fullSpace3DLines.push([[-2, 0, i], [2, 0, i]]);
-              fullSpace3DLines.push([[i, 0, -2], [i, 0, 2]]);
+            for (let i = -5; i <= 5; i += 1) {
+              fullSpace3DLines.push([[-range, 0, i], [range, 0, i]]);
+              fullSpace3DLines.push([[i, 0, -range], [i, 0, range]]);
             }
             
             // YZ plane lines
-            for (let i = -2; i <= 2; i += 1) {
-              fullSpace3DLines.push([[0, -2, i], [0, 2, i]]);
-              fullSpace3DLines.push([[0, i, -2], [0, i, 2]]);
+            for (let i = -5; i <= 5; i += 1) {
+              fullSpace3DLines.push([[0, -range, i], [0, range, i]]);
+              fullSpace3DLines.push([[0, i, -range], [0, i, range]]);
             }
             
             fullSpace3DLines.forEach(line => {
-              scene.add(createLine(line, colorHex, 2));
+              scene.add(createLine(line, colorHex, 5));
             });
             
             // Add label at origin
