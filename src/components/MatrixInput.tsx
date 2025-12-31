@@ -16,7 +16,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
   const [f_size, setF_Size] = useState<number>(3);
   const [matrix, setMatrix] = useState<number[][]>([[1, 0, 0], [0, 1, 0], [0, 0, 1]]
   );
-  const [f_matrix, setF_Matrix] = useState<string[][]>([['1', '0', '0'], ['0', '1', '0'], ['0', '0', '1']]
+  const [f_matrix, setF_Matrix] = useState<string[][]>([['1', '', ''], ['', '1', ''], ['', '', '1']]
   );
 
   const handleEigenspacesCalculated = useCallback((eigenspaces: Eigenspace[]) => {
@@ -71,6 +71,13 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                             key={`${rowIdx}-${col}`}
                             value={f_matrix[rowIdx]?.[col] ?? ''}
                             onChange={(e) => {
+                                // let item : string = "";
+                                // const value : number = parseFloat(e.target.value);
+
+                                // if (!isNaN(value)) {
+                                //     item = value.toString();
+                                // }
+
                                 f_matrix[rowIdx][col] = f_matrix[rowIdx][col] == "0" ? parseFloat(e.target.value).toString() : e.target.value;
                                 if (!isNaN(parseFloat(e.target.value)) || e.target.value === '' || e.target.value === '-') {
                                     updateMatrixValue(rowIdx, col, e.target.value);
@@ -78,6 +85,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                                 }
                             }}
                             className="matrix-cell"
+                            placeholder='0'
                         step="0.1"
                     />
                 )})}
