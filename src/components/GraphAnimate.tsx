@@ -45,7 +45,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
     if (is2D) {
       camera.position.set(0, 0, 8); // Top-down view for 2D
     } else {
-      camera.position.set(3, 3, 5); // Angled view for 3D with Z as upright axis
+      camera.position.set(8, 8, 10); // Angled view for 3D with Z as upright axis
     }
     camera.lookAt(0, 0, 0);
     
