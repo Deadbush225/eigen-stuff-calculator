@@ -65,6 +65,8 @@ function App() {
           )} */}
 
           {[2, 3].includes(matrix.length) && (
+            <div className="visualization-container">
+
             <div className="visualization-section">
               <h2>{textLabel[matrix.length].dimension} Matrix Transformation Visualization</h2>
               <p>
@@ -75,6 +77,7 @@ function App() {
               </p>
               <GraphAnimate transformationMatrix={matrix} eigenspaces={basisVectors} />
               <TransformationLegend transformationMatrix={matrix} eigenspaces={basisVectors} />
+            </div>
             </div>
           )}
           
