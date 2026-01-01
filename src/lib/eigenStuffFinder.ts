@@ -1,12 +1,14 @@
 import React from 'react';
 import MathDisplay from '../components/util/MathDisplay';
 
-import { create, all, type MathNode, type MathType, type Complex, exp } from 'mathjs';
+import { create, all, type MathNode, type MathType, type Complex } from 'mathjs';
 import { formatMatrix, nullSpaceBasis } from './matrixOperations';
 const math = create(all);
 
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
 type PolynomialCoefficients = number[];
+type LatexString = string;
+
 
 /**
  * Solves for real roots of a polynomial given its coefficients.
@@ -140,27 +142,11 @@ export function solveRealRoots(inputCoeffs: PolynomialCoefficients): number[] {
         .filter((value, index, array) => index === 0 || Math.abs(value - array[index - 1]) > 1e-8);
 }
 
-// --- Example Usage ---
-
-// Example 1: x^3 - 6x^2 + 11x - 6 (Roots: 1, 2, 3)
-const poly1: PolynomialCoefficients = [1, -6, 11, -6];
-console.log("Poly 1 Roots:", solveRealRoots(poly1));
-// console.warn(math.rationalize("(-1 + x)^(5)").toString());
-
-// Example 2: x^4 - 10x^3 + 35x^2 - 50x + 24 (Roots: 1, 2, 3, 4)
-const poly2: PolynomialCoefficients = [1, -10, 35, -50, 24];
-console.log("Poly 2 Roots:", solveRealRoots(poly2));
-
-// Example 3: (x-1)^3 = x^3 - 3x^2 + 3x - 1 (Triple root: 1, 1, 1)
-const poly3: PolynomialCoefficients = [1, -3, 3, -1];
-console.log("Poly 3 Roots (x-1)^3:", solveRealRoots(poly3));
-
 /**
  * Manual Eigenvalue Calculator
  * Implements the complete mathematical approach for finding eigenvalues manually
  * Pure TypeScript implementation without external library dependencies for core calculations
  */
-
 export interface EigenResult {
   eigenvalues: (number | Complex)[];
   eigenspaces: Eigenspace[];
@@ -207,13 +193,6 @@ function createXIMinusAMatrix(inputMatrix: number[][]): (string | number)[][] {
   
   return result;
 }
-
-type LatexString = string;
-
-// type PolynomialEquation = {
-//     expression: string;
-//     latex: string;
-// }
 
 /**
  * Step 2: Calculate determinant manually to get characteristic polynomial
@@ -368,214 +347,17 @@ function solveCharacteristicPolynomial(
   determinantExpr: characteristicPolynomial, 
   inputMatrix: number[][]
 ): { polynomial: string, eigenvalues: (number|Complex)[] } {
-  const n = inputMatrix.length;
   const coeff = determinantExpr.coefficients as (number | Complex)[];
-//   if (n === 1) {
-//     // Linear case: x - a = 0 → x = a
-//     const eigenvalue = inputMatrix[0][0];
-//     return {
-//       polynomial: `x - ${eigenvalue} = 0`,
-//       eigenvalues: [eigenvalue]
-//     };
-//   }
+
+    console.log("USING MATHJS POLY ROOT");
+    console.log(coeff[3], coeff[2], coeff[1], coeff[0]);
+
+    // use numerical approach or special cases
+    return {
+        polynomial: `${determinantExpr.expression.toString()} = 0`,
+        eigenvalues: solveRealRoots(coeff.reverse() as number[]),
+    };
   
-//   if (n === 2) {
-//     return solve2x2Characteristic(inputMatrix);
-//   }
-  
-//   if (n === 3) {
-//     return solve3x3Characteristic(inputMatrix, determinantExpr);
-//   }
-    if ([1,2,3,4,5].includes(n)) {
-        console.log("USING MATHJS POLY ROOT");
-        console.log(coeff[3], coeff[2], coeff[1], coeff[0]);
-        
-        // // if n = 3, manually calculate the roots following cubic formula to find the roots
-        // if (n === 3) {
-        //     const a = coeff[3] as number;
-        //     const b = coeff[2] as number;
-        //     const c = coeff[1] as number;
-        //     const d = coeff[0] as number;
-
-        //     // Cardano's method for solving cubic equations
-        //     const discriminant = 18 * a * b * c * d - 4 * b * b * b * d + b * b * c * c - 4 * a * c * c * c - 27 * a * a * d * d;
-
-        //     // Use Cardano's method (handled with real and complex cases)
-        //     const roots: (number | Complex)[] = [];
-
-        //     // Normalize coefficients: x^3 + A x^2 + B x + C = 0
-        //     const A = b / a;
-        //     const B = c / a;
-        //     const C = d / a;
-
-        //     // Compute intermediate values
-        //     const Q = (3 * B - A * A) / 9;
-        //     const R = (9 * A * B - 27 * C - 2 * A * A * A) / 54;
-        //     const Cardano_discriminant = Q * Q * Q + R * R; // Discriminant for depressed cubic
-
-        //     if (Cardano_discriminant >= 0) {
-        //         // One real root and two complex conjugates (or all real with multiplicities)
-        //         const sqrtD = Math.sqrt(Cardano_discriminant);
-        //         const S = Math.cbrt(R + sqrtD);
-        //         const T = Math.cbrt(R - sqrtD);
-
-        //         const y1 = S + T;
-        //         const x1 = y1 - A / 3;
-        //         roots.push(Number.isFinite(x1) ? x1 : math.complex(x1, 0));
-
-        //         // Complex conjugate pair
-        //         const realPart = -(S + T) / 2 - A / 3;
-        //         const imagPart = (S - T) * Math.sqrt(3) / 2;
-        //         roots.push(math.complex(realPart, imagPart));
-        //         roots.push(math.complex(realPart, -imagPart));
-        //     } else {
-        //         // Three distinct real roots
-        //         // const rho = Math.sqrt(-Q * Q * Q);
-        //         // Guard R / sqrt(-Q^3) in [-1,1] numerically
-        //         const cosArg = Math.max(-1, Math.min(1, R / Math.sqrt(-Q * Q * Q)));
-        //         const theta = Math.acos(cosArg);
-
-        //         const twoSqrtNegQ = 2 * Math.sqrt(-Q);
-        //         const y1 = twoSqrtNegQ * Math.cos(theta / 3);
-        //         const y2 = twoSqrtNegQ * Math.cos((theta + 2 * Math.PI) / 3);
-        //         const y3 = twoSqrtNegQ * Math.cos((theta + 4 * Math.PI) / 3);
-
-        //         roots.push(y1 - A / 3);
-        //         roots.push(y2 - A / 3);
-        //         roots.push(y3 - A / 3);
-        //     }
-            
-        //     console.log("Roots calculated via Cardano's method:", roots);
-
-        //     return {
-        //         polynomial: `${determinantExpr.expression} = 0`,
-        //         eigenvalues: roots,
-        //     };
-        // }
-
-        return {
-            polynomial: `${determinantExpr.expression.toString()} = 0`,
-            eigenvalues: solveRealRoots(coeff.reverse() as number[]),
-        };
-    }
-
-  // For larger matrices, use numerical approach or special cases
-  return {
-    polynomial: `Characteristic polynomial: ${determinantExpr} = 0`,
-    eigenvalues: solveNumerically(inputMatrix)
-  };
-}
-
-// /**
-//  * Check if matrix is diagonal
-//  */
-// function isDiagonalMatrix(matrix: number[][]): boolean {
-//   const n = matrix.length;
-//   for (let i = 0; i < n; i++) {
-//     for (let j = 0; j < n; j++) {
-//       if (i !== j && Math.abs(matrix[i][j]) > 1e-10) {
-//         return false;
-//       }
-//     }
-//   }
-//   return true;
-// }
-
-// /**
-//  * Check if numerical matrix is triangular
-//  */
-// function isTriangularNumerical(matrix: number[][]): boolean {
-//   const n = matrix.length;
-//   let isUpper = true;
-//   let isLower = true;
-  
-//   for (let i = 0; i < n; i++) {
-//     for (let j = 0; j < n; j++) {
-//       if (i > j && Math.abs(matrix[i][j]) > 1e-10) {
-//         isUpper = false;
-//       }
-//       if (i < j && Math.abs(matrix[i][j]) > 1e-10) {
-//         isLower = false;
-//       }
-//     }
-//   }
-  
-//   return isUpper || isLower;
-// }
-
-/**
- * Numerical eigenvalue solver for complex cases
- * Uses power iteration or QR algorithm concepts (simplified)
- */
-function solveNumerically(matrix: number[][]): number[] {
-  const n = matrix.length;
-  
-  // For demonstration, we'll use a simplified approach
-  // In practice, you'd implement QR algorithm or other numerical methods
-  
-  // Try some simple approaches first
-  if (n <= 3) {
-    // Use characteristic polynomial coefficients and Newton's method
-    return approximateEigenvalues(matrix);
-  }
-  
-  console.warn('Numerical eigenvalue calculation for large matrices not fully implemented');
-  return [];
-}
-
-/**
- * Approximate eigenvalues using iterative methods
- */
-function approximateEigenvalues(matrix: number[][]): number[] {
-  const n = matrix.length;
-  const eigenvalues: number[] = [];
-  
-  // Simple approach: try values near trace/n and use det(A - λI) = 0
-  const trace = calculateTraceManual(matrix);
-  const startGuess = trace / n;
-  
-  // Use Newton-Raphson method to find roots
-  for (let i = 0; i < n; i++) {
-    const guess = startGuess + i - n/2; // Spread guesses around
-    const eigenvalue = newtonRaphsonEigenvalue(matrix, guess);
-    if (eigenvalue !== null ) {
-    // Round eigenvalue if it's very close to a whole number or zero
-    const roundedEigenvalue = Math.abs(eigenvalue % 1) < 1e-4 || Math.abs(eigenvalue % 1) > 1 - 1e-4 
-      ? Math.round(eigenvalue) 
-      : eigenvalue;
-    eigenvalues.push(roundedEigenvalue);
-}
-}
-  
-  return eigenvalues.slice(0, n); // Return at most n eigenvalues
-}
-
-/**
- * Newton-Raphson method to find eigenvalue
- */
-function newtonRaphsonEigenvalue(matrix: number[][], initialGuess: number): number | null {
-  let x = initialGuess;
-  const tolerance = 1e-10;
-  const maxIterations = 50;
-  
-  for (let i = 0; i < maxIterations; i++) {
-    const fx = calculateCharacteristicValue(matrix, x);
-    const fpx = calculateCharacteristicDerivative(matrix, x);
-    
-    if (Math.abs(fpx) < tolerance) {
-      break; // Avoid division by zero
-    }
-    
-    const newX = x - fx / fpx;
-    
-    if (Math.abs(newX - x) < tolerance) {
-      return newX; // Converged
-    }
-    
-    x = newX;
-  }
-  
-  return null; // Did not converge
 }
 
 /**
@@ -598,16 +380,6 @@ function calculateCharacteristicValue(matrix: number[][], lambda: number): numbe
   }
   
   return calculateNumericalDeterminant(AMinusLambdaI);
-}
-
-/**
- * Calculate derivative of characteristic polynomial at λ
- */
-function calculateCharacteristicDerivative(matrix: number[][], lambda: number): number {
-  const h = 1e-8;
-  const f1 = calculateCharacteristicValue(matrix, lambda + h);
-  const f2 = calculateCharacteristicValue(matrix, lambda - h);
-  return (f1 - f2) / (2 * h);
 }
 
 /**
@@ -649,9 +421,9 @@ function getMinor(matrix: number[][], row: number, col: number): number[][] {
   return minor;
 }
 
-/**
- * Helper functions to format mathematical content for LaTeX display
- */
+
+// Helper functions to format mathematical content for LaTeX display
+
 
 /**
  * Format matrix for LaTeX display
@@ -1379,7 +1151,7 @@ export function displayStepByStep(inputMatrix: number[][]): React.JSX.Element {
     React.createElement('div', { className: 'summary' },
       React.createElement('h4', null, 'Summary'),
       React.createElement(MathDisplay, { 
-        latex: `\\text{All eigenvalues are real: } ${result.isReal}`,
+        latex: `\\text{All eigenvalues are real: } ${result.isReal}\\newline\\text{Trace: } \\operatorname{tr}(A) = ${result.trace}`,
         block: true 
       }),
     //   React.createElement(MathDisplay, { 

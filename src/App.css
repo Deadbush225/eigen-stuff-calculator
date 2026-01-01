@@ -55,6 +55,7 @@ h1,h2,h3,h4,h5,h6 {
 .visualization-container {
     padding: 1em;
     margin: 0 auto;
+    max-width: 1200px;
 }
 
 .visualization-section {
