@@ -274,8 +274,14 @@ function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolea
   
   for (let j = 0; j < 3; j++) {
     const element = matrix[0][j];
+    
+    // Skip if element is zero (optimization)
+    if (element === 0) {
+      continue;
+    }
+    
     let sign = j % 2 === 0 ? '+' : '-';
-    if (j === 0) sign = '';
+    if (j === 0 || terms.length === 0) sign = ''; // First non-zero term gets no sign
     
     // Create 2x2 minor by removing row 0 and column j
     const minor: (string | number)[][] = [];
@@ -290,7 +296,7 @@ function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolea
     
     const minorDet = calculate2x2Determinant(minor);
     let term = `${sign}(${element})\\Bigl[${minorDet}\\Bigr]`;
-    if (j != 2 && !asInner) {
+    if (j != 2 && !asInner && terms.length < 2) {
         term += `\\newline`;
     }
     terms.push(term);
@@ -310,10 +316,16 @@ function calculateLargerDeterminant(matrix: (string | number)[][], asInner?:bool
 
         for (let j = 0; j < 4; j++) {
             const element = matrix[0][j];
-            let sign = j % 2 === 0 ? '+' : '-';
-            if (j === 0) sign = '';
             
-            // Create 2x2 minor by removing row 0 and column j
+            // Skip if element is zero (optimization)
+            if (element === 0) {
+                continue;
+            }
+            
+            let sign = j % 2 === 0 ? '+' : '-';
+            if (j === 0 || terms.length === 0) sign = ''; // First non-zero term gets no sign
+            
+            // Create 3x3 minor by removing row 0 and column j
             const minor: (string | number)[][] = [];
             for (let i = 1; i < 4; i++) {
                 minor.push([]);
@@ -326,20 +338,29 @@ function calculateLargerDeterminant(matrix: (string | number)[][], asInner?:bool
 
             const minorDet = calculate3x3Determinant(minor, true);
             let term = `${sign}(${element})\\biggl[${minorDet}\\biggr]`;
-            if ((j!=(n-1)) && !asInner) {
-                term += `\\newline`;
-            }
+            // if (!asInner && terms.length < 3) {
+                // term += `\\newline`;
+            // }
             terms.push(term);
         }
-        return terms.join(' ');
+        
+        const expansion: string = terms.join("\\newline");
+
+        return expansion;
     }
     if (n === 5) {
         const terms: string[] = [];
 
         for (let j = 0; j < 5; j++) {
             const element = matrix[0][j];
+            
+            // Skip if element is zero (optimization)
+            if (element === 0) {
+                continue;
+            }
+            
             let sign = j % 2 === 0 ? '+' : '-';
-            if (j === 0) sign = '';
+            if (j === 0 || terms.length === 0) sign = ''; // First non-zero term gets no sign
             
             // Create 4x4 minor by removing row 0 and column j
             const minor: (string | number)[][] = [];
