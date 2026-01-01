@@ -71,17 +71,12 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                             key={`${rowIdx}-${col}`}
                             value={f_matrix[rowIdx]?.[col] ?? ''}
                             onChange={(e) => {
-                                // let item : string = "";
-                                // const value : number = parseFloat(e.target.value);
+                                const value = e.target.value;
 
-                                // if (!isNaN(value)) {
-                                //     item = value.toString();
-                                // }
+                                f_matrix[rowIdx][col] = value === '' ? '' : parseFloat(value).toString();
 
-                                f_matrix[rowIdx][col] = f_matrix[rowIdx][col] == "0" ? parseFloat(e.target.value).toString() : e.target.value;
-                                if (!isNaN(parseFloat(e.target.value)) || e.target.value === '' || e.target.value === '-') {
-                                    updateMatrixValue(rowIdx, col, e.target.value);
-                                
+                                if (!isNaN(parseFloat(value))) {
+                                    updateMatrixValue(rowIdx, col, value);
                                 }
                             }}
                             className="matrix-cell"
