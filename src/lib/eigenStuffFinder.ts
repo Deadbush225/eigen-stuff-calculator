@@ -302,7 +302,7 @@ function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolea
 /**
  * For larger matrices, use cofactor expansion (simplified)
  */
-function calculateLargerDeterminant(matrix: (string | number)[][]): LatexString {
+function calculateLargerDeterminant(matrix: (string | number)[][], asInner?:boolean): LatexString {
   const n = matrix.length;
 
     if (n === 4) {
@@ -325,12 +325,40 @@ function calculateLargerDeterminant(matrix: (string | number)[][]): LatexString 
             }
 
             const minorDet = calculate3x3Determinant(minor, true);
-            const term = `${sign}(${element})\\biggl[${minorDet}\\biggr]\\newline`;
+            let term = `${sign}(${element})\\biggl[${minorDet}\\biggr]`;
+            if ((j!=(n-1)) && !asInner) {
+                term += `\\newline`;
+            }
             terms.push(term);
         }
         return terms.join(' ');
     }
-    return "Determinant calculation for matrices larger than 4x4 is not implemented.";
+    if (n === 5) {
+        const terms: string[] = [];
+
+        for (let j = 0; j < 5; j++) {
+            const element = matrix[0][j];
+            let sign = j % 2 === 0 ? '+' : '-';
+            if (j === 0) sign = '';
+            
+            // Create 4x4 minor by removing row 0 and column j
+            const minor: (string | number)[][] = [];
+            for (let i = 1; i < 5; i++) {
+                minor.push([]);
+                for (let k = 0; k < 5; k++) {
+                    if (k !== j) {
+                        minor[i - 1].push(matrix[i][k]);
+                    }
+                }
+            }
+
+            const minorDet = calculateLargerDeterminant(minor, false);
+            const term = `${sign}(${element})\\Biggl[${minorDet}\\Biggr]\\newline`;
+            terms.push(term);
+        }
+        return terms.join(' ');
+    }
+    return "Determinant calculation for matrices larger than 5x5 is not implemented.";
 }
 
 type characteristicPolynomial = {
@@ -457,7 +485,8 @@ function formatExpressionLatex(expression: string): string {
 function cleanExpressionLatex(expression: string): string {
   const final = expression
     .replace(/\\left/g, '')
-    .replace(/\\right/g, '').replace(/\\Bigl/g, '').replace(/\\Bigr/g, '').replace(/\\biggr/g, '').replace(/\\biggl/g, '').replace(/\\cdot/g, '*').replace(/\\lambda/g, 'x').replace(/\\newline/g, '').replace(/\[/g, '(').replace(/\]/g, ')');
+    .replace(/\\right/g, '').replace(/\\Bigl/g, '').replace(/\\Bigr/g, '').replace(/\\biggr/g, '').replace(/\\biggl/g, '').replace(/\\Biggl/g, '').replace(/\\Biggr/g, '').
+    replace(/\\cdot/g, '*').replace(/\\lambda/g, 'x').replace(/\\newline/g, '').replace(/\[/g, '(').replace(/\]/g, ')');
     console.log("CLEANED EXPRESSION:", final);
     return final;
 }
@@ -1044,7 +1073,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
       // First attempt: use math.rationalize
     //   console.log('Determinant expression: (Rationalized)', mathjsexp.expression.toString());
     //   console.log('Coefficients:', mathjsexp.coefficients);
-      
+    //   window.alert("Using manual extraction for 5x5 matrix");
       mathjsexp = extractPolynomialCoefficients(simplified);
       console.log('Determinant expression: (Manual extraction)', mathjsexp.expression.toString());
       console.log('Coefficients:', mathjsexp.coefficients);
@@ -1096,7 +1125,8 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
     ),
     step4_eigenvalues: React.createElement('div', null,
       React.createElement('h4', null, 'Step 4: Eigenvalues σ(A)'),
-      React.createElement(MathDisplay, { latex: formatEigenvaluesLatex(polynomialResult.eigenvalues), block: true })
+      React.createElement(MathDisplay, { latex: formatEigenvaluesLatex(polynomialResult.eigenvalues), block: true }),
+      React.createElement(MathDisplay, { latex: mathjsResult.values.toString(), block: true })
     )
   };
   
