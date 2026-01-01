@@ -2,6 +2,7 @@ import { useState } from 'react'
 import MatrixInput from './components/MatrixInput'
 import GraphAnimate from './components/GraphAnimate'
 import TransformationLegend from './components/VisualizationLegend'
+import EigenspaceInfo from './components/EigenspaceInfo'
 import Navbar from './components/Navbar'
 import About from './components/About'
 import './App.css'
@@ -64,8 +65,9 @@ function App() {
             </div>
           )} */}
 
+        <div className="visualization-container">
+            <EigenspaceInfo eigenspaces={basisVectors} />
           {[2, 3].includes(matrix.length) && (
-            <div className="visualization-container">
 
             <div className="visualization-section">
               <h2>{textLabel[matrix.length].dimension} Matrix Transformation Visualization</h2>
@@ -78,8 +80,8 @@ function App() {
               <GraphAnimate transformationMatrix={matrix} eigenspaces={basisVectors} />
               <TransformationLegend transformationMatrix={matrix} eigenspaces={basisVectors} />
             </div>
-            </div>
           )}
+          </div>
           
           {matrix.length > 0 && ![2, 3].includes(matrix.length) && (
             <div className="visualization-info">

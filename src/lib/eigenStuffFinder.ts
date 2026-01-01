@@ -135,7 +135,9 @@ export function solveRealRoots(inputCoeffs: PolynomialCoefficients): number[] {
     }
 
     // Sort and format results (rounding to 4 decimals)
-    return roots.sort((a, b) => a - b).map(r => Math.abs(r - Math.round(r)) < 0.001 ? Math.round(r) : r);
+    return roots.sort((a, b) => a - b)
+        .map(r => Math.abs(r - Math.round(r)) < 0.01 ? Math.round(r) : r)
+        .filter((value, index, array) => index === 0 || Math.abs(value - array[index - 1]) > 1e-8);
 }
 
 // --- Example Usage ---
@@ -383,7 +385,7 @@ function solveCharacteristicPolynomial(
 //   if (n === 3) {
 //     return solve3x3Characteristic(inputMatrix, determinantExpr);
 //   }
-    if ([1,2,3].includes(n)) {
+    if ([1,2,3,4,5].includes(n)) {
         console.log("USING MATHJS POLY ROOT");
         console.log(coeff[3], coeff[2], coeff[1], coeff[0]);
         
@@ -843,6 +845,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
     // console.error('Error occurred while simplifying determinant expression:', e);
     // Cleanup or final steps if needed
 // }
+  
 
   // Step 3: Solve characteristic polynomial
 //   const polynomialResult = mathjsexp ? 
@@ -853,9 +856,9 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   // compare solution to mathjs
 //   try {
       const mathjsResult = math.eigs(inputMatrix);
-    console.log('Eigenvalues (mathjs):', mathjsResult.values);
+    console.warn('Eigenvalues (mathjs):', mathjsResult.values);
 // } finally {
-      console.log('Eigenvalues (manual):', polynomialResult);
+      console.warn('Eigenvalues (manual):', polynomialResult);
 // }
       
 

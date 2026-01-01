@@ -34,7 +34,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
       )
     );
     setMatrix(newMatrix);
-    setF_Matrix(newMatrix.map(row => row.map(value => value.toString())));
+    setF_Matrix(newMatrix.map(row => row.map(value => value === 0 ? '' : value.toString())));
     onMatrixChange?.(newMatrix);
   }, [matrix, onMatrixChange]);
 
