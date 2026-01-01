@@ -73,9 +73,16 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                             onChange={(e) => {
                                 const value = e.target.value;
 
-                                f_matrix[rowIdx][col] = value === '' ? '' : parseFloat(value).toString();
+                                // Update f_matrix state properly
+                                const newF_Matrix = f_matrix.map((matrixRow, i) => 
+                                    matrixRow.map((cell, j) => 
+                                        i === rowIdx && j === col ? value : cell
+                                    )
+                                );
+                                setF_Matrix(newF_Matrix);
 
-                                if (!isNaN(parseFloat(value))) {
+                                // Only update numeric matrix if value is a valid number
+                                if (value !== '' && !isNaN(parseFloat(value))) {
                                     updateMatrixValue(rowIdx, col, value);
                                 }
                             }}
@@ -126,8 +133,8 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
           <input
             id="matrix-size"
             type="number"
-            // min="2"
-            // max="10"
+            min="1"
+            max="5"
             value={f_size}
             // onChange={(e) => setSize(parseInt(e.target.value))}
             onChange={(e) => {
@@ -137,7 +144,7 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                     updateMatrixSize(newSize);
                 }
             }}
-            className="size-input"
+            className={`size-input ${f_size > 5 || f_size < 1 ? 'red' : ''}`}
           />
         </div>
       </div>
