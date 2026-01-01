@@ -295,6 +295,10 @@ function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolea
     }
     
     const minorDet = calculate2x2Determinant(minor);
+    if (minorDet === "") {
+        continue;
+    }
+
     let term = `${sign}(${element})\\Bigl[${minorDet}\\Bigr]`;
     if (j != 2 && !asInner && terms.length < 2) {
         term += `\\newline`;
@@ -337,6 +341,10 @@ function calculateLargerDeterminant(matrix: (string | number)[][], asInner?:bool
             }
 
             const minorDet = calculate3x3Determinant(minor, true);
+            if (minorDet === "") {
+                continue;
+            }
+
             let term = `${sign}(${element})\\biggl[${minorDet}\\biggr]`;
             // if (!asInner && terms.length < 3) {
                 // term += `\\newline`;
@@ -374,6 +382,9 @@ function calculateLargerDeterminant(matrix: (string | number)[][], asInner?:bool
             }
 
             const minorDet = calculateLargerDeterminant(minor, false);
+            if (minorDet === "") {
+                continue;
+            }
             const term = `${sign}(${element})\\Biggl[${minorDet}\\Biggr]\\newline`;
             terms.push(term);
         }
