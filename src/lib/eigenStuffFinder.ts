@@ -1,146 +1,15 @@
 import React from 'react';
 import MathDisplay from '../components/util/MathDisplay';
 
-import { create, all, type MathNode, type MathType, type Complex } from 'mathjs';
+import { type MathNode, type MathType, type Complex } from 'mathjs';
 import { formatMatrix, nullSpaceBasis } from './matrixOperations';
-const math = create(all);
+import { solveRealRoots } from './realRootsSolver';
+import { math } from './math';
+import { calculateTriangularDeterminant, calculate2x2Determinant, calculate3x3Determinant, calculateLargerDeterminant } from './determinantFinder';
 
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
-type PolynomialCoefficients = number[];
-type LatexString = string;
+import { type LatexString } from './math';
 
-
-/**
- * Solves for real roots of a polynomial given its coefficients.
- * Uses Newton-Raphson method with Synthetic Division deflation.
- * @param inputCoeffs - [an, an-1, ..., a0] for an*x^n + ... + a0
- * @returns Array of real roots
- */
-export function solveRealRoots(inputCoeffs: PolynomialCoefficients): number[] {
-    // Clone inputs to avoid mutating the original array
-    let coeffs = [...inputCoeffs];
-    const roots: number[] = [];
-    
-    // 1. Clean coefficients (remove leading zeros)
-    while (coeffs.length > 0 && coeffs[0] === 0) {
-        coeffs.shift();
-    }
-    
-    // Helper: Convert coeffs array to math.js expression string
-    // Example: [1, -3, 2] -> "(1 * x^2) + (-3 * x^1) + (2 * x^0)"
-    const coeffsToExpression = (c: PolynomialCoefficients): string => {
-        const degree = c.length - 1;
-        const terms = c.map((val, idx) => {
-            if (val === 0) return '';
-            const power = degree - idx;
-            return `(${val} * x^${power})`;
-        }).filter(t => t !== '');
-        
-        return terms.length > 0 ? terms.join(' + ') : '0';
-    };
-
-    // Helper: Synthetic Division
-    // Divides polynomial 'poly' by (x - root) and returns the quotient polynomial
-    const deflate = (polyCoeffs: PolynomialCoefficients, root: number): PolynomialCoefficients => {
-        const newCoeffs: number[] = [];
-        let remainder = polyCoeffs[0];
-        newCoeffs.push(remainder);
-        
-        // We stop at length - 1 because the last result of synthetic division
-        // is the remainder (which we discard for the deflated polynomial)
-        for (let i = 1; i < polyCoeffs.length - 1; i++) {
-            remainder = polyCoeffs[i] + (remainder * root);
-            newCoeffs.push(remainder);
-        }
-        
-        // Clean up tiny coefficients that are likely numerical errors
-        return newCoeffs.map(coeff => Math.abs(coeff) < 1e-12 ? 0 : coeff);
-    };
-
-    // Recursive solver loop
-    let attempts = 0;
-    while (coeffs.length > 1 && attempts < 10) {
-        // Optimization: Handle Linear Case directly (ax + b = 0)
-        // This prevents numerical instability for the final root
-        if (coeffs.length === 2) {
-            // Avoid -0 result
-            const root = coeffs[1] === 0 ? 0 : -coeffs[1] / coeffs[0];
-            roots.push(root);
-            break; 
-        }
-
-        // Setup Newton-Raphson using math.js
-        const exprStr = coeffsToExpression(coeffs);
-        
-        // Compile functions for efficiency
-        const f = math.compile(exprStr);
-        const fp = math.derivative(exprStr, 'x').compile();
-
-        let found = false;
-        
-        // Try multiple starting points for better convergence
-        const startingPoints = [
-            Math.random() * 10 - 5,  // Random guess
-            0,                       // Try zero
-            1,                       // Try one
-            -1,                      // Try negative one
-            ...roots.map(r => r + 0.1), // Try near existing roots for repeated roots
-        ];
-        
-        for (const initialGuess of startingPoints) {
-            let guess = initialGuess;
-            let converged = false;
-            
-            // Newton Loop (Max 100 iterations per starting point)
-            for (let i = 0; i < 100; i++) {
-                const y = f.evaluate({x: guess});
-                const dy = fp.evaluate({x: guess});
-
-                // If we're very close to zero, we found a root
-                if (Math.abs(y) < 1e-10) {
-                    roots.push(guess);
-                    coeffs = deflate(coeffs, guess);
-                    found = true;
-                    converged = true;
-                    break;
-                }
-
-                // Handle stationary points (derivative is 0)
-                if (Math.abs(dy) < 1e-10) {
-                    break; // Try next starting point
-                }
-
-                const newGuess = guess - (y / dy);
-
-                // Check for convergence
-                if (Math.abs(newGuess - guess) < 1e-10) {
-                    // Double-check that this is actually a root
-                    const rootCheck = f.evaluate({x: newGuess});
-                    if (Math.abs(rootCheck) < 1e-8) {
-                        roots.push(newGuess);
-                        coeffs = deflate(coeffs, newGuess);
-                        found = true;
-                        converged = true;
-                        break;
-                    }
-                }
-                guess = newGuess;
-            }
-            
-            if (converged) break;
-        }
-        
-        attempts++;
-        
-        // Safety break: if we can't find a root (e.g., only complex roots left), stop.
-        if (!found) break;
-    }
-
-    // Sort and format results (rounding to 4 decimals)
-    return roots.sort((a, b) => a - b)
-        .map(r => Math.abs(r - Math.round(r)) < 0.01 ? Math.round(r) : r)
-        .filter((value, index, array) => index === 0 || Math.abs(value - array[index - 1]) > 1e-8);
-}
 
 /**
  * Manual Eigenvalue Calculator
@@ -243,156 +112,6 @@ function isTriangularMatrix(matrix: (string | number)[][]): boolean {
   return isUpper || isLower;
 }
 
-/**
- * Calculate determinant for triangular matrices (product of diagonal)
- */
-function calculateTriangularDeterminant(matrix: (string | number)[][]): LatexString {
-  const diagonal = [];
-  for (let i = 0; i < matrix.length; i++) {
-    diagonal.push(`(${matrix[i][i]})`);
-  }
-  return  diagonal.join(' \\cdot ');
-}
-
-/**
- * Calculate 2x2 determinant: (a)(d) - (b)(c)
- */
-function calculate2x2Determinant(matrix: (string | number)[][]): LatexString {
-  const a = matrix[0][0];
-  const b = matrix[0][1];
-  const c = matrix[1][0];
-  const d = matrix[1][1];
-
-  return `(${a})(${d}) - (${b})(${c})`;
-}
-
-/**
- * Calculate 3x3 determinant using cofactor expansion along first row
- */
-function calculate3x3Determinant(matrix: (string | number)[][], asInner?: boolean): LatexString {
-  const terms: string[] = [];
-  
-  for (let j = 0; j < 3; j++) {
-    const element = matrix[0][j];
-    
-    // Skip if element is zero (optimization)
-    if (element === 0) {
-      continue;
-    }
-    
-    let sign = j % 2 === 0 ? '+' : '-';
-    if (j === 0 || terms.length === 0) sign = ''; // First non-zero term gets no sign
-    
-    // Create 2x2 minor by removing row 0 and column j
-    const minor: (string | number)[][] = [];
-    for (let i = 1; i < 3; i++) {
-      minor.push([]);
-      for (let k = 0; k < 3; k++) {
-        if (k !== j) {
-          minor[i - 1].push(matrix[i][k]);
-        }
-      }
-    }
-    
-    const minorDet = calculate2x2Determinant(minor);
-    if (minorDet === "") {
-        continue;
-    }
-
-    let term = `${sign}(${element})\\Bigl[${minorDet}\\Bigr]`;
-    if (j != 2 && !asInner && terms.length < 2) {
-        term += `\\newline`;
-    }
-    terms.push(term);
-  }
-
-  return terms.join(' ');
-}
-
-/**
- * For larger matrices, use cofactor expansion (simplified)
- */
-function calculateLargerDeterminant(matrix: (string | number)[][], asInner?:boolean): LatexString {
-  const n = matrix.length;
-
-    if (n === 4) {
-  const terms: string[] = [];
-
-        for (let j = 0; j < 4; j++) {
-            const element = matrix[0][j];
-            
-            // Skip if element is zero (optimization)
-            if (element === 0) {
-                continue;
-            }
-            
-            let sign = j % 2 === 0 ? '+' : '-';
-            if (j === 0 || terms.length === 0) sign = ''; // First non-zero term gets no sign
-            
-            // Create 3x3 minor by removing row 0 and column j
-            const minor: (string | number)[][] = [];
-            for (let i = 1; i < 4; i++) {
-                minor.push([]);
-                for (let k = 0; k < 4; k++) {
-                    if (k !== j) {
-                        minor[i - 1].push(matrix[i][k]);
-                    }
-                }
-            }
-
-            const minorDet = calculate3x3Determinant(minor, true);
-            if (minorDet === "") {
-                continue;
-            }
-
-            let term = `${sign}(${element})\\biggl[${minorDet}\\biggr]`;
-            // if (!asInner && terms.length < 3) {
-                // term += `\\newline`;
-            // }
-            terms.push(term);
-        }
-        
-        const expansion: string = terms.join("\\newline");
-
-        return expansion;
-    }
-    if (n === 5) {
-        const terms: string[] = [];
-
-        for (let j = 0; j < 5; j++) {
-            const element = matrix[0][j];
-            
-            // Skip if element is zero (optimization)
-            if (element === 0) {
-                continue;
-            }
-            
-            let sign = j % 2 === 0 ? '+' : '-';
-            if (j === 0 || terms.length === 0) sign = ''; // First non-zero term gets no sign
-            
-            // Create 4x4 minor by removing row 0 and column j
-            const minor: (string | number)[][] = [];
-            for (let i = 1; i < 5; i++) {
-                minor.push([]);
-                for (let k = 0; k < 5; k++) {
-                    if (k !== j) {
-                        minor[i - 1].push(matrix[i][k]);
-                    }
-                }
-            }
-
-            const minorDet = calculateLargerDeterminant(minor, false);
-            if (minorDet === "") {
-                continue;
-            }
-            const term = `${sign}(${element})\\Biggl[${minorDet}\\Biggr]\\newline`;
-            terms.push(term);
-        }
-        return terms.join(' ');
-    }
-    return "Determinant calculation for matrices larger than 5x5 is not implemented.";
-}
-
 type characteristicPolynomial = {
     expression: MathNode | string;
     variables: string[];
@@ -415,7 +134,7 @@ function solveCharacteristicPolynomial(
     // use numerical approach or special cases
     return {
         polynomial: `${determinantExpr.expression.toString()} = 0`,
-        eigenvalues: solveRealRoots(coeff.reverse() as number[]),
+        eigenvalues: solveRealRoots(coeff.reverse() as number[], determinantExpr.expression.toString()),
     };
   
 }
@@ -484,7 +203,6 @@ function getMinor(matrix: number[][], row: number, col: number): number[][] {
 
 // Helper functions to format mathematical content for LaTeX display
 
-
 /**
  * Format matrix for LaTeX display
  */
@@ -521,17 +239,6 @@ function cleanExpressionLatex(expression: string): string {
     replace(/\\cdot/g, '*').replace(/\\lambda/g, 'x').replace(/\\newline/g, '').replace(/\[/g, '(').replace(/\]/g, ')');
     console.log("CLEANED EXPRESSION:", final);
     return final;
-}
-
-/**
- * Format polynomial for LaTeX display
- */
-function formatPolynomialLatex(polynomial: string): string {
-  return polynomial
-    .replace(/x/g, '\\lambda')
-    .replace(/\^(\d+)/g, '^{$1}')
-    .replace(/\*/g, '\\cdot')
-    .replace(/= 0/g, '= 0');
 }
 
 /**
@@ -1094,22 +801,23 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   // Step 2: Calculate determinant expression
   const determinantExpression = calculateDeterminantExpression(xIMinusA);
   console.log('Determinant expression: (Raw)', determinantExpression);
-
-  let mathjsexp: characteristicPolynomial;
   
   const simplified = math.simplify(cleanExpressionLatex(determinantExpression))
-  if (n != 5) {
-    console.log("SIMPLIFIED:", simplified.toString());
+  console.log("SIMPLIFIED EXPRESSION:", simplified.toString());
+  
+  let mathjsexp: characteristicPolynomial;
+  
+  try {
+    // Always try math.js rationalize first, regardless of matrix size
+    console.log("Attempting math.js rationalize...");
     mathjsexp = math.rationalize(simplified, {}, true);
-  }else {
-      // First attempt: use math.rationalize
-    //   console.log('Determinant expression: (Rationalized)', mathjsexp.expression.toString());
-    //   console.log('Coefficients:', mathjsexp.coefficients);
-    //   window.alert("Using manual extraction for 5x5 matrix");
-      mathjsexp = extractPolynomialCoefficients(simplified);
-      console.log('Determinant expression: (Manual extraction)', mathjsexp.expression.toString());
-      console.log('Coefficients:', mathjsexp.coefficients);
-    }
+    console.log('Rationalize successful. Coefficients:', mathjsexp.coefficients);
+  } catch (error) {
+    console.warn('Math.js rationalize failed, using manual extraction:', error);
+    // Fallback to manual extraction
+    mathjsexp = extractPolynomialCoefficients(simplified);
+    console.log('Manual extraction coefficients:', mathjsexp.coefficients);
+  }
   
   // Step 3: Solve characteristic polynomial
 //   const polynomialResult = mathjsexp ? 
@@ -1153,7 +861,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
     ),
     step3_polynomial: React.createElement('div', null,
       React.createElement('h4', null, 'Step 3: Characteristic Polynomial'),
-      React.createElement(MathDisplay, { latex: formatPolynomialLatex(polynomialResult.polynomial), block: true })
+      React.createElement(MathDisplay, { latex: formatExpressionLatex(polynomialResult.polynomial), block: true })
     ),
     step4_eigenvalues: React.createElement('div', null,
       React.createElement('h4', null, 'Step 4: Eigenvalues σ(A)'),
