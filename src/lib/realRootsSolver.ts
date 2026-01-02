@@ -7,13 +7,31 @@ type PolynomialCoefficients = number[];
  * For each eigenvalue λ, verify that det(A - λI) ≈ 0
  */
 export function validateEigenvalues(eigenvalues: number[]): number[] {
-// remove duplicates and negative zeros (including small negative values close to zero)
-const uniqueEigenvalues = Array.from(new Set(eigenvalues.map(ev => 
-    Math.abs(ev) < 1e-12 ? 0 : ev
-)));
-  console.warn('Validated eigenvalues:', uniqueEigenvalues);
-  return uniqueEigenvalues;
-}
+    const EPSILON = 1e-6;
+
+    // 1. Snap values to nearby integers or zero
+    const snapped = eigenvalues.map(ev => {
+        const rounded = Math.round(ev);
+        // If it's effectively an integer, return the integer
+        if (Math.abs(ev - rounded) < EPSILON) return rounded;
+        // If it's effectively zero (but round might not catch it if it's 0.000001)
+        if (Math.abs(ev) < EPSILON) return 0;
+        return ev;
+    });
+
+    // 2. Remove duplicates using the same threshold
+    // We use reduce to build an array of unique values
+    return snapped.reduce<number[]>((acc, current) => {
+        const isDuplicate = acc.some(uniqueVal => 
+            Math.abs(uniqueVal - current) < EPSILON
+        );
+        
+        if (!isDuplicate) {
+            acc.push(current);
+        }
+        return acc;
+    }, []);
+};
 
 
 /**

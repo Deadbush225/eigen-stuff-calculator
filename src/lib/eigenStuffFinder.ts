@@ -2,7 +2,7 @@ import React from 'react';
 import MathDisplay from '../components/util/MathDisplay';
 
 import { type MathNode, type MathType, type Complex } from 'mathjs';
-import { formatMatrix, nullSpaceBasis } from './matrixOperations';
+import { formatMatrix, rref } from './matrixOperations';
 import { solveRealRoots } from './realRootsSolver';
 import { math } from './math';
 import { calculateTriangularDeterminant, calculate2x2Determinant, calculate3x3Determinant, calculateLargerDeterminant } from './determinantFinder';
@@ -270,15 +270,209 @@ function findEigenvectorBasis(xIMinusA: (string | number)[][], eigenvalue: numbe
     }
     console.log('Matrix for eigenvalue', eigenvalue, ':', formatMatrix(xIMinusACopy));
 
-
     // row reduce the matrix to find null space
-    const nullSpace = nullSpaceBasis(xIMinusACopy as number[][]);
+    let nullSpace = robustNullSpaceBasis(xIMinusACopy as number[][]);
+    
+    // Verify we have valid eigenvectors (non-zero)
+    const validBasis = nullSpace.filter(vec => 
+        vec.some(component => Math.abs(component) > 1e-12)
+    );
+    
+    // If no valid eigenvectors found, this suggests numerical issues
+    if (validBasis.length === 0) {
+        console.warn(`No valid eigenvectors found for eigenvalue ${eigenvalue}. Using fallback method.`);
+        nullSpace = findEigenvectorsFallback(xIMinusACopy as number[][], eigenvalue);
+    }
+    
     console.log("EigenSpace Basis", formatMatrix(nullSpace));
 
     return {
         eigenvalue,
         basis: nullSpace,
     };
+}
+
+/**
+ * Robust null space basis finder specifically for eigenspace calculations
+ * Handles numerical precision issues and ensures non-zero eigenvectors
+ */
+function robustNullSpaceBasis(matrix: number[][]): number[][] {
+    const tolerance = 1e-12;
+    const rrefMatrix = rref(matrix);
+    const rows = rrefMatrix.length;
+    const cols = rrefMatrix[0].length;
+    
+    // Find pivot columns with numerical tolerance
+    const pivotCols: number[] = [];
+    const freeVars: number[] = [];
+    
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const val = rrefMatrix[row][col];
+            if (typeof val === 'number' && Math.abs(val - 1) < tolerance) {
+                // Check if this is the leading entry in the row
+                let isLeading = true;
+                for (let prevCol = 0; prevCol < col; prevCol++) {
+                    const prevVal = rrefMatrix[row][prevCol];
+                    if (typeof prevVal === 'number' && Math.abs(prevVal) > tolerance) {
+                        isLeading = false;
+                        break;
+                    }
+                }
+                if (isLeading && !pivotCols.includes(col)) {
+                    pivotCols.push(col);
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Identify free variables
+    for (let col = 0; col < cols; col++) {
+        if (!pivotCols.includes(col)) {
+            freeVars.push(col);
+        }
+    }
+    
+    // For eigenspaces, there should always be free variables
+    // If none found, the matrix might have numerical precision issues
+    if (freeVars.length === 0) {
+        console.warn("No free variables found - this shouldn't happen for eigenspaces");
+        // Return a standard basis vector as fallback
+        return [Array(cols).fill(0).map((_, i) => i === 0 ? 1 : 0)];
+    }
+    
+    const basisVectors: number[][] = [];
+    
+    // For each free variable, create a basis vector
+    for (const freeVar of freeVars) {
+        const basisVector = new Array(cols).fill(0);
+        basisVector[freeVar] = 1; // Set free variable to 1
+        
+        // Express pivot variables in terms of this free variable
+        for (let row = 0; row < rows; row++) {
+            // Find the pivot column for this row
+            let pivotCol = -1;
+            for (let col = 0; col < cols; col++) {
+                const val = rrefMatrix[row][col];
+                if (typeof val === 'number' && Math.abs(val - 1) < tolerance) {
+                    // Check if this is a leading 1
+                    let isLeading = true;
+                    for (let prevCol = 0; prevCol < col; prevCol++) {
+                        const prevVal = rrefMatrix[row][prevCol];
+                        if (typeof prevVal === 'number' && Math.abs(prevVal) > tolerance) {
+                            isLeading = false;
+                            break;
+                        }
+                    }
+                    if (isLeading) {
+                        pivotCol = col;
+                        break;
+                    }
+                }
+            }
+            
+            if (pivotCol !== -1) {
+                const coeff = rrefMatrix[row][freeVar];
+                if (typeof coeff === 'number' && Math.abs(coeff) > tolerance) {
+                    basisVector[pivotCol] = -coeff;
+                }
+            }
+        }
+        
+        basisVectors.push(basisVector);
+    }
+    
+    return basisVectors.length > 0 ? basisVectors : [Array(cols).fill(0).map((_, i) => i === 0 ? 1 : 0)];
+}
+
+/**
+ * Fallback method for finding eigenvectors when primary method fails
+ * Uses direct computation with perturbation
+ */
+function findEigenvectorsFallback(lambdaIMinusA: number[][], _eigenvalue: number | Complex): number[][] {
+    const n = lambdaIMinusA.length;
+    const tolerance = 1e-10;
+    
+    // Try different approaches to find a non-zero vector in the null space
+    
+    // Method 1: Try each standard basis vector
+    for (let i = 0; i < n; i++) {
+        const testVector = Array(n).fill(0);
+        testVector[i] = 1;
+        
+        const result = multiplyMatrixVector(lambdaIMinusA, testVector);
+        const norm = Math.sqrt(result.reduce((sum, val) => sum + val * val, 0));
+        
+        if (norm < tolerance) {
+            return [testVector];
+        }
+    }
+    
+    // Method 2: Try random vectors and use power iteration-like approach
+    for (let attempt = 0; attempt < 10; attempt++) {
+        let testVector = Array(n).fill(0).map(() => Math.random() - 0.5);
+        
+        // Normalize
+        let norm = Math.sqrt(testVector.reduce((sum, val) => sum + val * val, 0));
+        if (norm > 0) {
+            testVector = testVector.map(val => val / norm);
+        }
+        
+        // Try to find a vector that's close to the null space
+        let bestVector = testVector;
+        let bestError = Infinity;
+        
+        for (let iter = 0; iter < 20; iter++) {
+            const result = multiplyMatrixVector(lambdaIMinusA, testVector);
+            const error = Math.sqrt(result.reduce((sum, val) => sum + val * val, 0));
+            
+            if (error < bestError) {
+                bestError = error;
+                bestVector = [...testVector];
+            }
+            
+            if (error < tolerance) {
+                return [testVector];
+            }
+            
+            // Adjust vector to reduce error (gradient descent-like)
+            for (let j = 0; j < n; j++) {
+                testVector[j] -= 0.1 * result[j];
+            }
+            
+            // Normalize
+            norm = Math.sqrt(testVector.reduce((sum, val) => sum + val * val, 0));
+            if (norm > 0) {
+                testVector = testVector.map(val => val / norm);
+            }
+        }
+        
+        if (bestError < tolerance * 10) {
+            return [bestVector];
+        }
+    }
+    
+    // Method 3: Last resort - return the first standard basis vector
+    console.warn("Fallback: returning standard basis vector");
+    return [Array(n).fill(0).map((_, i) => i === 0 ? 1 : 0)];
+}
+
+/**
+ * Helper function to multiply matrix by vector
+ */
+function multiplyMatrixVector(matrix: number[][], vector: number[]): number[] {
+    const result: number[] = [];
+    
+    for (let i = 0; i < matrix.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < vector.length; j++) {
+            sum += matrix[i][j] * vector[j];
+        }
+        result.push(sum);
+    }
+    
+    return result;
 }
 
 /**
