@@ -35,7 +35,7 @@ function cleanExpressionLatex(expression: string): string {
   const final = expression
     .replace(/\\left/g, '')
     .replace(/\\right/g, '').replace(/\\Bigl/g, '').replace(/\\Bigr/g, '').replace(/\\biggr/g, '').replace(/\\biggl/g, '').replace(/\\Biggl/g, '').replace(/\\Biggr/g, '').
-    replace(/\\cdot/g, '*').replace(/\\lambda/g, 'x').replace(/\\newline/g, '').replace(/\[/g, '(').replace(/\]/g, ')');
+    replace(/\\cdot/g, '*').replace(/\\lambda/g, 'x').replace(/\\newline/g, '').replace(/\[/g, '(').replace(/\]/g, ')').replace(/{/g, '').replace(/}/g, '');
     console.log("CLEANED EXPRESSION:", final);
     return final;
 }
@@ -67,7 +67,7 @@ function formatEigenvaluesLatex(eigenvalues: (number | Complex)[]): string {
 /**
  * Split LaTeX string into lines of ~200 characters, breaking at + or - operators
  */
-function splitLatexByOperators(latex: string, maxLineLength: number = 200): string {
+function splitLatexByOperators(latex: string, maxLineLength: number = 1000): string {
     const parts: string[] = [];
     let currentPart = '';
     

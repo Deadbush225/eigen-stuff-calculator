@@ -33,8 +33,6 @@ export function calculateLargerDeterminant(matrix: (string | number)[][], depth:
 
   // Base Case: 2x2
   if (n === 2) {
-    // we recreate the 2 by 2 matrix here
-    // const minor = getMinor(matrix, 0, 0);
     return calculate2x2Determinant(matrix);
   }
 
@@ -59,7 +57,7 @@ export function calculateLargerDeterminant(matrix: (string | number)[][], depth:
     if (minorDet === "") continue;
 
     // Formatting: (+)(-1)^(i+j)(element)[minorDet]
-    const term = `+[(-1)^(${1}+${j + 1})(${element})${openBracket}${minorDet}${closeBracket}]`;
+    const term = `+(-1)^{(${1}+${j + 1})}(${element})${openBracket}${minorDet}${closeBracket}`;
     terms.push(term);
   }
 

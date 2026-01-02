@@ -1266,15 +1266,15 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
         
       React.createElement(MathDisplay, { latex: formatMatrixLatex(xIMinusA), block: true })
     ),
-    step2_determinant: React.createElement('div', null,
+    step2_determinant: React.createElement('div', {className: 'dynamix-latex'},
       React.createElement('h4', null, 'Step 2: Calculate det(xI - A)'),
-      React.createElement(MathDisplay, { latex: `\\det(xI - A) = ${splitLatexByOperators(formatExpressionLatex(determinantExpression))}`, block: true })
+      React.createElement(MathDisplay, { latex: `\\det(xI - A) = ${splitLatexByOperators(formatExpressionLatex(determinantExpression))}`, block: true,  })
     ),
-    step3_polynomial: React.createElement('div', null,
+    step3_polynomial: React.createElement('div', {className: 'dynamix-latex'},
       React.createElement('h4', null, 'Step 3: Characteristic Polynomial'),
       React.createElement(MathDisplay, { latex: formatExpressionLatex(polynomialResult.polynomial), block: true })
     ),
-    step4_eigenvalues: React.createElement('div', null,
+    step4_eigenvalues: React.createElement('div', {className: 'dynamix-latex'},
       React.createElement('h4', null, 'Step 4: Eigenvalues σ(A)'),
       React.createElement(MathDisplay, { latex: formatEigenvaluesLatex(polynomialResult.eigenvalues), block: true }),
     //   React.createElement(MathDisplay, { latex: mathjsResult.values.toString(), block: true })

@@ -152,3 +152,12 @@ h1,h2,h3,h4,h5,h6 {
 .about-section:nth-child(even) {
     animation-delay: 0.1s;
 }
+
+.dynamix-latex .katex-display .katex .katex-html {
+    display: flex;
+    position: relative;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4em 0;
+}
