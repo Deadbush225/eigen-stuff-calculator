@@ -84,7 +84,9 @@ export function solveRealRoots(inputCoeffs: PolynomialCoefficients, poly: string
     }
 
     // For higher degree polynomials, use optimized Newton-Raphson
-    return validateEigenvalues(optimizedNewtonRaphson(poly, coeffs));
+    let eigenvalues : number[] = validateEigenvalues(optimizedNewtonRaphson(poly, coeffs));
+
+    return eigenvalues;
 }
 
 /**

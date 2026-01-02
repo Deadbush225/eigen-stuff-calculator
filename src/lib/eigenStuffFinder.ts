@@ -3,10 +3,11 @@ import MathDisplay from '../components/util/MathDisplay';
 
 import { type MathNode, type MathType, type Complex } from 'mathjs';
 import { formatMatrix, rref } from './matrixOperations';
-import { solveRealRoots } from './realRootsSolver';
-import { math } from './math';
+import { solveRealRoots, validateEigenvalues } from './realRootsSolver';
+import { math, type characteristicPolynomial } from './math';
 import { calculateTriangularDeterminant, calculate2x2Determinant, calculate3x3Determinant, calculateLargerDeterminant } from './determinantFinder';
-import { formatMatrixLatex, formatExpressionLatex, formatEigenvaluesLatex, cleanExpressionLatex, splitLatexByOperators } from './latexFormatter';
+import { formatMatrixLatex, formatExpressionLatex, formatEigenvaluesLatex, cleanExpressionLatex, splitLatexByOperators, coefficientToPolynomial } from './latexFormatter';
+import { expandPolynomialManual } from './expressionDeflater';
 
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
 import { type LatexString } from './math';
@@ -113,12 +114,6 @@ function isTriangularMatrix(matrix: (string | number)[][]): boolean {
   return isUpper || isLower;
 }
 
-type characteristicPolynomial = {
-    expression: MathNode | string;
-    variables: string[];
-    coefficients: MathType[];
-}
-
 /**
  * Step 3: Parse and solve characteristic polynomial manually
  * Converts the determinant expression into a polynomial and finds roots
@@ -127,17 +122,318 @@ function solveCharacteristicPolynomial(
   determinantExpr: characteristicPolynomial, 
   inputMatrix: number[][]
 ): { polynomial: string, eigenvalues: (number|Complex)[] } {
-  const coeff = determinantExpr.coefficients as (number | Complex)[];
+  const coeff = determinantExpr.coefficients as number[];
 
     console.log("USING MATHJS POLY ROOT");
-    console.log(coeff[3], coeff[2], coeff[1], coeff[0]);
+    console.log(coeff.reverse());
 
-    // use numerical approach or special cases
+    // use numerical approach for n = 1 to 3
+    let roots: number[] = [];
+    if (coeff.length <= 4) {
+    roots = solveRealRoots(coeff.reverse() as number[], determinantExpr.expression.toString());
+    } else {
+        console.log("Newton-Raphson method failed to find roots");
+        
+        // For 4x4 and 5x5 matrices, try diagonalization method
+        if (inputMatrix.length === 4 || inputMatrix.length === 5) {
+            console.log(`Matrix size: ${inputMatrix.length}x${inputMatrix.length}, attempting diagonalization method...`);
+            
+            try {
+                const diagonalizationRoots = findEigenvaluesByDiagonalization(inputMatrix);
+                if (diagonalizationRoots.length > 0) {
+                    console.log("✓ Diagonalization method successful:", diagonalizationRoots);
+                    roots = validateEigenvalues(diagonalizationRoots);
+                } else {
+                    console.log("❌ Diagonalization method also failed");
+                }
+            } catch (error) {
+                console.warn("Diagonalization method failed:", error);
+            }
+        }
+        
+        // Final fallback: math.js eigs()
+        if (roots.length === 0) {
+            console.log("Using math.js eigs() as final fallback...");
+            try {
+                const mathjsRoots = math.eigs(inputMatrix).values;
+                roots = mathjsRoots as number[];
+                console.log("✓ math.js eigs() successful:", roots);
+            } catch (error) {
+                console.error("Even math.js eigs() failed:", error);
+                roots = [];
+            }
+        }
+    }
+
     return {
         polynomial: `${determinantExpr.expression.toString()} = 0`,
-        eigenvalues: solveRealRoots(coeff.reverse() as number[], determinantExpr.expression.toString()),
+        eigenvalues: roots,
     };
   
+}
+
+/**
+ * Find eigenvalues using diagonalization method
+ * Uses QR algorithm or power iteration for numerical eigenvalue computation
+ */
+function findEigenvaluesByDiagonalization(matrix: number[][]): number[] {
+    console.log("=== DIAGONALIZATION METHOD ===");
+    console.log("Input matrix:", matrix);
+    
+    try {
+        // Method 1: QR Algorithm (most robust)
+        const qrEigenvalues = qrAlgorithm(matrix);
+        if (qrEigenvalues.length > 0) {
+            console.log("QR Algorithm found eigenvalues:", qrEigenvalues);
+            return qrEigenvalues;
+        }
+    } catch (error) {
+        console.warn("QR Algorithm failed:", error);
+    }
+    
+    try {
+        // Method 2: Power Iteration for dominant eigenvalue + deflation
+        const powerIterationEigenvalues = powerIterationWithDeflation(matrix);
+        if (powerIterationEigenvalues.length > 0) {
+            console.log("Power Iteration found eigenvalues:", powerIterationEigenvalues);
+            return powerIterationEigenvalues;
+        }
+    } catch (error) {
+        console.warn("Power Iteration failed:", error);
+    }
+    
+    try {
+        // Method 3: Direct math.js approach as backup
+        const mathjsEigs = math.eigs(matrix);
+        const eigenvalues = Array.isArray(mathjsEigs.values) ? mathjsEigs.values : [mathjsEigs.values];
+        console.log("Direct math.js found eigenvalues:", eigenvalues);
+        return eigenvalues as number[];
+    } catch (error) {
+        console.warn("Direct math.js eigenvalue computation failed:", error);
+    }
+    
+    return [];
+}
+
+/**
+ * QR Algorithm for eigenvalue computation
+ */
+function qrAlgorithm(A: number[][], maxIterations = 100, tolerance = 1e-10): number[] {
+    const n = A.length;
+    let Ak = A.map(row => [...row]); // Copy matrix
+    
+    for (let iter = 0; iter < maxIterations; iter++) {
+        // QR decomposition
+        const { Q, R } = qrDecomposition(Ak);
+        
+        // Update: A_{k+1} = R * Q
+        Ak = multiplyMatrices(R, Q);
+        
+        // Check convergence (off-diagonal elements should approach 0)
+        let converged = true;
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                if (i !== j && Math.abs(Ak[i][j]) > tolerance) {
+                    converged = false;
+                    break;
+                }
+            }
+            if (!converged) break;
+        }
+        
+        if (converged) {
+            console.log(`QR Algorithm converged in ${iter + 1} iterations`);
+            break;
+        }
+    }
+    
+    // Extract eigenvalues from diagonal
+    const eigenvalues: number[] = [];
+    for (let i = 0; i < n; i++) {
+        eigenvalues.push(Ak[i][i]);
+    }
+    
+    return eigenvalues.filter(val => isFinite(val));
+}
+
+/**
+ * QR Decomposition using Gram-Schmidt process
+ */
+function qrDecomposition(A: number[][]): { Q: number[][], R: number[][] } {
+    const m = A.length;
+    const n = A[0].length;
+    
+    const Q: number[][] = Array(m).fill(null).map(() => Array(n).fill(0));
+    const R: number[][] = Array(n).fill(null).map(() => Array(n).fill(0));
+    
+    // Gram-Schmidt process
+    for (let j = 0; j < n; j++) {
+        // Get column j of A
+        const aj: number[] = [];
+        for (let i = 0; i < m; i++) {
+            aj[i] = A[i][j];
+        }
+        
+        // Start with aj
+        const qj = [...aj];
+        
+        // Subtract projections onto previous Q columns
+        for (let k = 0; k < j; k++) {
+            const qk: number[] = [];
+            for (let i = 0; i < m; i++) {
+                qk[i] = Q[i][k];
+            }
+            
+            const projection = dotProduct(aj, qk);
+            R[k][j] = projection;
+            
+            for (let i = 0; i < m; i++) {
+                qj[i] -= projection * qk[i];
+            }
+        }
+        
+        // Normalize qj
+        const norm = Math.sqrt(qj.reduce((sum, val) => sum + val * val, 0));
+        R[j][j] = norm;
+        
+        if (norm > 1e-15) {
+            for (let i = 0; i < m; i++) {
+                Q[i][j] = qj[i] / norm;
+            }
+        }
+    }
+    
+    return { Q, R };
+}
+
+/**
+ * Power Iteration with deflation to find multiple eigenvalues
+ */
+function powerIterationWithDeflation(A: number[][]): number[] {
+    const n = A.length;
+    const eigenvalues: number[] = [];
+    let currentMatrix = A.map(row => [...row]); // Copy
+    
+    for (let eigenIndex = 0; eigenIndex < Math.min(n, 3); eigenIndex++) {
+        try {
+            const { eigenvalue, eigenvector } = powerIteration(currentMatrix);
+            
+            if (isFinite(eigenvalue) && Math.abs(eigenvalue) > 1e-10) {
+                eigenvalues.push(eigenvalue);
+                
+                // Deflate the matrix to remove this eigenvalue
+                currentMatrix = deflateMatrix(currentMatrix, eigenvalue, eigenvector);
+            } else {
+                break; // No more significant eigenvalues
+            }
+        } catch (error) {
+            console.warn(`Power iteration failed for eigenvalue ${eigenIndex + 1}:`, error);
+            break;
+        }
+    }
+    
+    return eigenvalues;
+}
+
+/**
+ * Power Iteration to find dominant eigenvalue
+ */
+function powerIteration(A: number[][], maxIterations = 100, tolerance = 1e-10): { eigenvalue: number, eigenvector: number[] } {
+    const n = A.length;
+    
+    // Random initial vector
+    let v = Array(n).fill(0).map(() => Math.random() - 0.5);
+    
+    // Normalize
+    let norm = Math.sqrt(v.reduce((sum, val) => sum + val * val, 0));
+    v = v.map(val => val / norm);
+    
+    let eigenvalue = 0;
+    
+    for (let iter = 0; iter < maxIterations; iter++) {
+        // v_new = A * v
+        const Av = multiplyMatrixVector(A, v);
+        
+        // Calculate eigenvalue estimate (Rayleigh quotient)
+        const newEigenvalue = dotProduct(v, Av) / dotProduct(v, v);
+        
+        // Normalize Av
+        norm = Math.sqrt(Av.reduce((sum, val) => sum + val * val, 0));
+        if (norm < 1e-15) {
+            throw new Error("Vector became zero during power iteration");
+        }
+        
+        const newV = Av.map(val => val / norm);
+        
+        // Check convergence
+        if (Math.abs(newEigenvalue - eigenvalue) < tolerance) {
+            return { eigenvalue: newEigenvalue, eigenvector: newV };
+        }
+        
+        eigenvalue = newEigenvalue;
+        v = newV;
+    }
+    
+    return { eigenvalue, eigenvector: v };
+}
+
+/**
+ * Matrix deflation to remove an eigenvalue
+ */
+function deflateMatrix(A: number[][], eigenvalue: number, eigenvector: number[]): number[][] {
+    const n = A.length;
+    const result: number[][] = Array(n).fill(null).map(() => Array(n).fill(0));
+    
+    // A' = A - λ * v * v^T (where v is normalized eigenvector)
+    const norm = Math.sqrt(eigenvector.reduce((sum, val) => sum + val * val, 0));
+    const normalizedV = eigenvector.map(val => val / norm);
+    
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            result[i][j] = A[i][j] - eigenvalue * normalizedV[i] * normalizedV[j];
+        }
+    }
+    
+    return result;
+}
+
+/**
+ * Helper functions for matrix operations
+ */
+function multiplyMatrices(A: number[][], B: number[][]): number[][] {
+    const rows = A.length;
+    const cols = B[0].length;
+    const inner = B.length;
+    
+    const result: number[][] = Array(rows).fill(null).map(() => Array(cols).fill(0));
+    
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            for (let k = 0; k < inner; k++) {
+                result[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+    
+    return result;
+}
+
+function multiplyMatrixVector(matrix: number[][], vector: number[]): number[] {
+    const result: number[] = [];
+    
+    for (let i = 0; i < matrix.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < vector.length; j++) {
+            sum += matrix[i][j] * vector[j];
+        }
+        result.push(sum);
+    }
+    
+    return result;
+}
+
+function dotProduct(a: number[], b: number[]): number {
+    return a.reduce((sum, val, i) => sum + val * b[i], 0);
 }
 
 /**
@@ -456,23 +752,6 @@ function findEigenvectorsFallback(lambdaIMinusA: number[][], _eigenvalue: number
     // Method 3: Last resort - return the first standard basis vector
     console.warn("Fallback: returning standard basis vector");
     return [Array(n).fill(0).map((_, i) => i === 0 ? 1 : 0)];
-}
-
-/**
- * Helper function to multiply matrix by vector
- */
-function multiplyMatrixVector(matrix: number[][], vector: number[]): number[] {
-    const result: number[] = [];
-    
-    for (let i = 0; i < matrix.length; i++) {
-        let sum = 0;
-        for (let j = 0; j < vector.length; j++) {
-            sum += matrix[i][j] * vector[j];
-        }
-        result.push(sum);
-    }
-    
-    return result;
 }
 
 /**
@@ -937,17 +1216,18 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
   
   let mathjsexp: characteristicPolynomial;
   
-  try {
-    // Always try math.js rationalize first, regardless of matrix size
-    console.log("Attempting math.js rationalize...");
-    mathjsexp = math.rationalize(simplified, {}, true);
-    console.log('Rationalize successful. Coefficients:', mathjsexp.coefficients);
-  } catch (error) {
-    console.warn('Math.js rationalize failed, using manual extraction:', error);
+//   try {
+//     // Always try math.js rationalize first, regardless of matrix size
+//     console.log("Attempting math.js rationalize...");
+//     mathjsexp = math.rationalize(simplified, {}, true);
+//     console.log('Rationalize successful. Coefficients:', mathjsexp.coefficients);
+//   } catch (error) {
+    // console.warn('Math.js rationalize failed, using manual extraction:', error);
     // Fallback to manual extraction
-    mathjsexp = extractPolynomialCoefficients(simplified);
+    mathjsexp = expandPolynomialManual(simplified.toString());
+    // mathjsexp = extractPolynomialCoefficients(simplified);
     console.log('Manual extraction coefficients:', mathjsexp.coefficients);
-  }
+//   }
   
   // Step 3: Solve characteristic polynomial
 //   const polynomialResult = mathjsexp ? 
@@ -987,11 +1267,11 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
     ),
     step2_determinant: React.createElement('div', null,
       React.createElement('h4', null, 'Step 2: Calculate det(xI - A)'),
-      React.createElement(MathDisplay, { latex: `\\det(xI - A) = ${formatExpressionLatex(determinantExpression)}`, block: true })
+      React.createElement(MathDisplay, { latex: `\\det(xI - A) = ${splitLatexByOperators(formatExpressionLatex(determinantExpression))}`, block: true })
     ),
     step3_polynomial: React.createElement('div', null,
       React.createElement('h4', null, 'Step 3: Characteristic Polynomial'),
-      React.createElement(MathDisplay, { latex: splitLatexByOperators(formatExpressionLatex(polynomialResult.polynomial)), block: true })
+      React.createElement(MathDisplay, { latex: formatExpressionLatex(polynomialResult.polynomial), block: true })
     ),
     step4_eigenvalues: React.createElement('div', null,
       React.createElement('h4', null, 'Step 4: Eigenvalues σ(A)'),

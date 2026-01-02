@@ -1,4 +1,4 @@
-import { type Complex } from 'mathjs';
+import { re, type Complex } from 'mathjs';
 
 // Helper functions to format mathematical content for LaTeX display
 
@@ -65,9 +65,9 @@ function formatEigenvaluesLatex(eigenvalues: (number | Complex)[]): string {
 }
 
 /**
- * Split LaTeX string into lines of ~100 characters, breaking at + or - operators
+ * Split LaTeX string into lines of ~200 characters, breaking at + or - operators
  */
-function splitLatexByOperators(latex: string, maxLineLength: number = 100): string {
+function splitLatexByOperators(latex: string, maxLineLength: number = 200): string {
     const parts: string[] = [];
     let currentPart = '';
     
@@ -90,7 +90,29 @@ function splitLatexByOperators(latex: string, maxLineLength: number = 100): stri
         parts.push(currentPart);
     }
     
-    return parts.join(' \\\\\n& ');
+    return parts.join(' \\newline ');
+}
+
+function coefficientToPolynomial(coefficients: number[]): string {
+    let polynomial = '';
+    let degree = coefficients.length - 1;
+
+  for (let i = 0; i < coefficients.length; i++) {
+    if (coefficients[i] === 0) {
+      degree--;
+      continue;
+    }
+    
+    // Add plus sign for positive coefficients (except the first term)
+    if (i > 0 && coefficients[i] > 0) {
+      polynomial += '+';
+    }
+    const term = coefficients[i].toString();
+    const variable = `x^{${degree--}}`;
+    polynomial += term + variable;
+  }
+
+  return polynomial;
 }
 
 export {
@@ -99,4 +121,5 @@ export {
     formatEigenvaluesLatex,
     cleanExpressionLatex,
     splitLatexByOperators,
+    coefficientToPolynomial
 };
