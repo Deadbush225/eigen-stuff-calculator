@@ -30,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <span className="lambda">λ</span>
           </div>
           <div className="logo-text">
-            <h1>EigenCalc</h1>
+            <h1>Solinjaro</h1>
             <span className="tagline">Matrix Eigenvalue Calculator</span>
           </div>
         </div>

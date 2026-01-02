@@ -393,3 +393,19 @@
 .about-section:nth-child(even) {
     animation-delay: 0.1s;
 }
+
+img.member-photo {
+    width: 10em;
+    border-radius: 1em;
+}
+
+.members-grid {
+    display: flex;
+    gap: 2em 2em;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .member-card {
+        width: min-content
+    }
+}

@@ -2,12 +2,20 @@ import React from "react";
 import MathDisplay from "./util/MathDisplay";
 import "./About.scss";
 
+const MemberCard : React.FC<{ Fname: string, Lname: string, path: string }> = ({ Fname, Lname, path }) => (
+    <div className="member-card">
+        <img src={path} alt={`${Fname} ${Lname}`} className="member-photo" />
+        <h3 style={{margin: 0}}>{Lname}</h3>
+        <p style={{ margin: 0 }}>{Fname}</p>
+    </div>
+);
+
 const About: React.FC = () => {
 	return (
 		<div className="about-container">
 			<div className="about-content">
 				<header className="about-header">
-					<h1>About EigenCalc</h1>
+					<h1>About Solinjaro</h1>
 					<p className="subtitle">
 						Understanding Linear Algebra Through Visualization
 					</p>
@@ -16,31 +24,24 @@ const About: React.FC = () => {
 				<div className="about-sections">
                     <section className="about-section">
                         <div className="about-sections">
+                    <div>
                     <h2>👥 Team Members</h2>
+                    <h3 style={{display: "inline"}}>Section: </h3><p style={{display: "inline"}}>BSCS 2-2</p>
+                    </div>
                     <div className="members-grid">
-                        <div className="member-card">
-                            <h3>Inso</h3>
-                        </div>
-                        <div className="member-card">
-                            <h3>Sevilla</h3>
-                        </div>
-                        <div className="member-card">
-                            <h3>Rodriguez</h3>
-                        </div>
-                        <div className="member-card">
-                            <h3>Jamison</h3>
-                        </div>
-                        <div className="member-card">
-                            <h3>Oliveros</h3>
-                        </div>
+                        <MemberCard Fname="Eliazar" Lname="INSO" path="/profiles/inso.jpg" />
+                        <MemberCard Fname="Mark Elijah" Lname="SEVILLA" path="/profiles/sevilla.jpg" />
+                        <MemberCard Fname="Jan Earl" Lname="RODRIGUEZ" path="/profiles/rodriguez.jpg" />
+                        <MemberCard Fname="Hanzlei" Lname="JAMISON" path="/profiles/jamison.jpg" />
+                        <MemberCard Fname="Mariel" Lname="OLIVEROS" path="/profiles/oliveros.jpg" />
                     </div>
                 </div>
                     </section>
 
 					<section className="about-section">
-						<h2>🎯 What is EigenCalc?</h2>
+						<h2>🎯 What is Solinjaro?</h2>
 						<p>
-							EigenCalc is an interactive eigenvalue calculator designed to help
+							Solinjaro is an interactive eigenvalue calculator designed to help
 							students and educators understand the mathematical concepts behind
 							eigenvalues and eigenvectors through step-by-step calculations and
 							3D visualizations.
