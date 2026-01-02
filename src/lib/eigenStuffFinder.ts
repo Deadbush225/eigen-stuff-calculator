@@ -1226,6 +1226,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
     // Fallback to manual extraction
     mathjsexp = expandPolynomialManual(simplified.toString());
     // mathjsexp = extractPolynomialCoefficients(simplified);
+    console.log('Manual extraction expression:', mathjsexp.expression.toString());
     console.log('Manual extraction coefficients:', mathjsexp.coefficients);
 //   }
   
