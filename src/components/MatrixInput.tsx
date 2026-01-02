@@ -82,9 +82,8 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                                 setF_Matrix(newF_Matrix);
 
                                 // Only update numeric matrix if value is a valid number
-                                if (value !== '' && !isNaN(parseFloat(value))) {
-                                    updateMatrixValue(rowIdx, col, value);
-                                }
+                                updateMatrixValue(rowIdx, col,value === "" ? "0": value);
+                                
                             }}
                             className="matrix-cell"
                             placeholder='0'
