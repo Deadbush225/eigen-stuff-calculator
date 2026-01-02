@@ -6,6 +6,7 @@ import { formatMatrix, nullSpaceBasis } from './matrixOperations';
 import { solveRealRoots } from './realRootsSolver';
 import { math } from './math';
 import { calculateTriangularDeterminant, calculate2x2Determinant, calculate3x3Determinant, calculateLargerDeterminant } from './determinantFinder';
+import { formatMatrixLatex, formatExpressionLatex, formatEigenvaluesLatex, cleanExpressionLatex } from './latexFormatter';
 
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
 import { type LatexString } from './math';
@@ -200,71 +201,6 @@ function getMinor(matrix: number[][], row: number, col: number): number[][] {
   return minor;
 }
 
-
-// Helper functions to format mathematical content for LaTeX display
-
-/**
- * Format matrix for LaTeX display
- */
-function formatMatrixLatex(matrix: (string | number)[][]): string {
-  const rows = matrix.map(row => 
-    row.map(cell => {
-      if (typeof cell === 'string') {
-        // Replace 'x' with proper LaTeX variable
-        return cell.replace(/x/g, '\\lambda');
-      }
-      return cell.toString();
-    }).join(' & ')
-  ).join(' \\\\ ');
-  
-  return `\\begin{bmatrix} ${rows} \\end{bmatrix}`;
-}
-
-/**
- * Format expression for LaTeX display
- */
-function formatExpressionLatex(expression: string): string {
-  return expression
-    .replace(/x/g, '\\lambda')
-    .replace(/\*/g, '\\cdot')
-    .replace(/\^(\d+)/g, '^{$1}')
-    // .replace(/\(/g, '\\left(')
-    // .replace(/\)/g, '\\right)');
-}
-
-function cleanExpressionLatex(expression: string): string {
-  const final = expression
-    .replace(/\\left/g, '')
-    .replace(/\\right/g, '').replace(/\\Bigl/g, '').replace(/\\Bigr/g, '').replace(/\\biggr/g, '').replace(/\\biggl/g, '').replace(/\\Biggl/g, '').replace(/\\Biggr/g, '').
-    replace(/\\cdot/g, '*').replace(/\\lambda/g, 'x').replace(/\\newline/g, '').replace(/\[/g, '(').replace(/\]/g, ')');
-    console.log("CLEANED EXPRESSION:", final);
-    return final;
-}
-
-/**
- * Format eigenvalues for LaTeX display
- */
-function formatEigenvaluesLatex(eigenvalues: (number | Complex)[]): string {
-  const formattedValues = eigenvalues.map(val => {
-    if (typeof val === 'number') {
-      return val.toFixed(4);
-    } else {
-      // Handle Complex numbers
-      const complex = val as Complex;
-      if (complex.im === 0) {
-        return complex.re.toFixed(4);
-      } else if (complex.re === 0) {
-        return `${complex.im.toFixed(4)}i`;
-      } else {
-        const sign = complex.im >= 0 ? '+' : '-';
-        return `${complex.re.toFixed(4)} ${sign} ${Math.abs(complex.im).toFixed(4)}i`;
-      }
-    }
-  });
-  
-  return `\\sigma(A) = \\{${formattedValues.join(', ')}\\}`;
-}
-
 /**
  * Calculate trace manually (sum of diagonal elements)
  */
@@ -326,8 +262,8 @@ function findEigenvectorBasis(xIMinusA: (string | number)[][], eigenvalue: numbe
                 // Replace 'x' with eigenvalue
                 const x = math.evaluate((xIMinusACopy[i][j] as string).replace(/x/g, `${eigenvalue.toString()}`))
 
-                console.log("X:", x);
-                console.log("EIGENVALUE: ", eigenvalue.toString());
+                // console.log("X:", x);
+                // console.log("EIGENVALUE: ", eigenvalue.toString());
                 xIMinusACopy[i][j] = x;
             }
         }
@@ -883,22 +819,6 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 }
 
 /**
- * Helper function to validate eigenvalues manually
- * For each eigenvalue λ, verify that det(A - λI) ≈ 0
- */
-export function validateEigenvalues(inputMatrix: number[][], eigenvalues: number[]): boolean {
-  for (const lambda of eigenvalues) {
-    const det_result = calculateCharacteristicValue(inputMatrix, lambda);
-    if (Math.abs(det_result) > 1e-8) { // Allow for numerical precision
-      console.warn(`Eigenvalue ${lambda} validation failed: det(A - λI) = ${det_result}`);
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-/**
  * Helper function to get characteristic equation as a string
  */
 export function getCharacteristicEquation(inputMatrix: number[][]): string {
@@ -924,10 +844,6 @@ export function displayStepByStep(inputMatrix: number[][]): React.JSX.Element {
         latex: `\\text{All eigenvalues are real: } ${result.isReal}\\newline\\text{Trace: } \\operatorname{tr}(A) = ${result.trace}`,
         block: true 
       }),
-    //   React.createElement(MathDisplay, { 
-        // latex: ``,
-        // block: true 
-    //   })
     )
   );
 }

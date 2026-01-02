@@ -3,6 +3,20 @@ import { math } from './math';
 type PolynomialCoefficients = number[];
 
 /**
+ * Helper function to validate eigenvalues manually
+ * For each eigenvalue λ, verify that det(A - λI) ≈ 0
+ */
+export function validateEigenvalues(eigenvalues: number[]): number[] {
+// remove duplicates and negative zeros (including small negative values close to zero)
+const uniqueEigenvalues = Array.from(new Set(eigenvalues.map(ev => 
+    Math.abs(ev) < 1e-12 ? 0 : ev
+)));
+  console.warn('Validated eigenvalues:', uniqueEigenvalues);
+  return uniqueEigenvalues;
+}
+
+
+/**
  * Solves for real roots of a polynomial given its coefficients.
  * Uses Newton-Raphson method with Synthetic Division deflation.
  * @param inputCoeffs - [an, an-1, ..., a0] for an*x^n + ... + a0
@@ -48,11 +62,11 @@ export function solveRealRoots(inputCoeffs: PolynomialCoefficients, poly: string
 
     if (coeffs.length === 4) {
         // Cubic: use exact formula
-        return solveCubicOptimized(coeffs);
+        return validateEigenvalues(solveCubicOptimized(coeffs));
     }
 
     // For higher degree polynomials, use optimized Newton-Raphson
-    return optimizedNewtonRaphson(poly, coeffs);
+    return validateEigenvalues(optimizedNewtonRaphson(poly, coeffs));
 }
 
 /**

@@ -102,7 +102,7 @@ export function calculateLargerDeterminant(matrix: (string | number)[][], asInne
                 continue;
             }
 
-            let term = `${sign}(${element})\\biggl[${minorDet}\\biggr]`;
+            const term = `${sign}(${element})\\biggl[${minorDet}\\biggr]`;
             // if (!asInner && terms.length < 3) {
                 // term += `\\newline`;
             // }
