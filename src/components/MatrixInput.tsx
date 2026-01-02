@@ -65,10 +65,11 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
             <div key={col} className="matrix-column">
                 {matrix.map((row, rowIdx) => {
                     // let v = row[col] || 0;
+                    const cellStr = f_matrix[rowIdx]?.[col] ?? '';
                     return (
                         <input
                             key={`${rowIdx}-${col}`}
-                            value={f_matrix[rowIdx]?.[col] ?? ''}
+                            value={cellStr}
                             onChange={(e) => {
                                 const value = e.target.value;
 
@@ -84,11 +85,11 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
                                 updateMatrixValue(rowIdx, col,value === "" ? "0": value);
                                 
                             }}
-                            className="matrix-cell"
+                            className={`matrix-cell ${cellStr !== '' && isNaN(parseFloat(cellStr)) ? 'red' : ''}`}
                             placeholder='0'
-                        step="0.1"
-                    />
-                )})}
+                            step="0.1"
+                        />
+                    )})}
             </div>
         ))}
         </div>
