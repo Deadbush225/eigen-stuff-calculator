@@ -13,7 +13,7 @@ export function validateEigenvalues(eigenvalues: number[]): number[] {
     const snapped = eigenvalues.map(ev => {
         const rounded = Math.round(ev);
         // If it's effectively an integer, return the integer
-        if (Math.abs(ev - rounded) < EPSILON) return rounded;
+        if (Math.abs(ev - rounded) < 1e-2) return rounded;
         // If it's effectively zero (but round might not catch it if it's 0.000001)
         if (Math.abs(ev) < EPSILON) return 0;
         return ev;

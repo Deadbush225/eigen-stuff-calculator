@@ -1,13 +1,12 @@
 .eigenspace-info {
     margin: 20px 0;
     padding: 20px;
-    background: #f8f9fa;
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 8px;
-    border: 1px solid #dee2e6;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
     h3 {
         margin: 0 0 15px 0;
-        color: #343a40;
         font-size: 1.2em;
     }
 }
@@ -19,10 +18,10 @@
 }
 
 .eigenspace-row {
-    background: white;
+    background: rgba(100, 108, 255, 0.1);
+    border: 1px solid rgba(100, 108, 255, 0.2);
     border-radius: 6px;
     padding: 15px;
-    border: 1px solid #e9ecef;
 }
 
 .eigenspace-header {
@@ -43,12 +42,10 @@
 .eigenvalue-label {
     font-weight: bold;
     font-size: 1.1em;
-    color: #495057;
     min-width: 80px;
 }
 
 .eigenspace-type {
-    color: #6c757d;
     font-style: italic;
     font-size: 0.9em;
 }
@@ -59,7 +56,6 @@
 
 .basis-label {
     font-weight: 500;
-    color: #495057;
     margin-right: 8px;
     font-size: 0.9em;
 }
@@ -72,13 +68,11 @@
 }
 
 .basis-vector {
-    background: #f1f3f4;
+    background: #585b7587;
     padding: 4px 8px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
     font-size: 0.9em;
-    color: #495057;
-    border: 1px solid #dee2e6;
 }
 
 @media (max-width: 768px) {

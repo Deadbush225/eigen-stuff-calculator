@@ -6,7 +6,7 @@ import { formatMatrix, rref } from './matrixOperations';
 import { solveRealRoots } from './realRootsSolver';
 import { math } from './math';
 import { calculateTriangularDeterminant, calculate2x2Determinant, calculate3x3Determinant, calculateLargerDeterminant } from './determinantFinder';
-import { formatMatrixLatex, formatExpressionLatex, formatEigenvaluesLatex, cleanExpressionLatex } from './latexFormatter';
+import { formatMatrixLatex, formatExpressionLatex, formatEigenvaluesLatex, cleanExpressionLatex, splitLatexByOperators } from './latexFormatter';
 
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
 import { type LatexString } from './math';
@@ -991,12 +991,12 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
     ),
     step3_polynomial: React.createElement('div', null,
       React.createElement('h4', null, 'Step 3: Characteristic Polynomial'),
-      React.createElement(MathDisplay, { latex: formatExpressionLatex(polynomialResult.polynomial), block: true })
+      React.createElement(MathDisplay, { latex: splitLatexByOperators(formatExpressionLatex(polynomialResult.polynomial)), block: true })
     ),
     step4_eigenvalues: React.createElement('div', null,
       React.createElement('h4', null, 'Step 4: Eigenvalues σ(A)'),
       React.createElement(MathDisplay, { latex: formatEigenvaluesLatex(polynomialResult.eigenvalues), block: true }),
-      React.createElement(MathDisplay, { latex: mathjsResult.values.toString(), block: true })
+    //   React.createElement(MathDisplay, { latex: mathjsResult.values.toString(), block: true })
     )
   };
   

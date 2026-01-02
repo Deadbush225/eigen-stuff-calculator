@@ -64,9 +64,39 @@ function formatEigenvaluesLatex(eigenvalues: (number | Complex)[]): string {
   return `\\sigma(A) = \\{${formattedValues.join(', ')}\\}`;
 }
 
+/**
+ * Split LaTeX string into lines of ~100 characters, breaking at + or - operators
+ */
+function splitLatexByOperators(latex: string, maxLineLength: number = 100): string {
+    const parts: string[] = [];
+    let currentPart = '';
+    
+    for (let i = 0; i < latex.length; i++) {
+        const char = latex[i];
+        currentPart += char;
+        
+        // Check if we should break at + or - operators
+        if ((char === '+' || char === '-') && currentPart.length >= maxLineLength) {
+            // Don't break if this is the first character or if previous char is also an operator
+            if (i > 0 && latex[i-1] !== '+' && latex[i-1] !== '-') {
+                parts.push(currentPart);
+                currentPart = '';
+            }
+        }
+    }
+    
+    // Add remaining part if any
+    if (currentPart.length > 0) {
+        parts.push(currentPart);
+    }
+    
+    return parts.join(' \\\\\n& ');
+}
+
 export {
-  formatMatrixLatex,
-  formatExpressionLatex,
-  formatEigenvaluesLatex,
-  cleanExpressionLatex
+    formatMatrixLatex,
+    formatExpressionLatex,
+    formatEigenvaluesLatex,
+    cleanExpressionLatex,
+    splitLatexByOperators,
 };
