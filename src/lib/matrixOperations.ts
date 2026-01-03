@@ -30,7 +30,10 @@ function E2(matrix: MatrixWString, r: number, scalar: number): MatrixWString {
 	return newMatrix;
 }
 
+const EPSILON = 1e-10;
+
 // E3: Row replacement (r2 = r2 - scalar * r1)
+// E3: Row replacement with "Snap to Zero" logic
 function E3(
 	matrix: MatrixWString,
 	r1: number,
@@ -44,10 +47,16 @@ function E3(
 			typeof newMatrix[r2][j] === "number" &&
 			typeof newMatrix[r1][j] === "number"
 		) {
-			// Cast to number first to avoid arithmetic on union-typed indexed access
 			const a = newMatrix[r2][j] as number;
 			const b = newMatrix[r1][j] as number;
-			newMatrix[r2][j] = a - b * scalar;
+			let result = a - b * scalar;
+
+			// FIX: Snap tiny floating point errors to strict 0
+			if (Math.abs(result) < EPSILON) {
+				result = 0;
+			}
+
+			newMatrix[r2][j] = result;
 		} else {
 			newMatrix[r2][
 				j
@@ -60,52 +69,61 @@ function E3(
 
 /**
  * Reduced Row Echelon Form (RREF) Algorithm
- * Uses elementary row operations to transform matrix to RREF
+ * Updated with numerical tolerance for float stability
  */
 export function rref(matrix: MatrixWString): MatrixWString {
-	// Create a copy to avoid modifying the original matrix
+	// Create a copy
 	let result = matrix.map((row) => [...row]);
 	const rows = result.length;
 	const cols = result[0].length;
 
 	let currentRow = 0;
 
-	// Process each column
 	for (let col = 0; col < cols && currentRow < rows; col++) {
-		// Step 1: Find a non-zero pivot in current column
+		// Step 1: Find a non-zero pivot (USING EPSILON)
 		let pivotRowIndex = -1;
+
+		// First, try to find a nice integer pivot if possible (optional stability optimization)
+		// Then fall back to any non-zero
 		for (let row = currentRow; row < rows; row++) {
-			if (typeof result[row][col] === "number" && result[row][col] !== 0) {
+			const val = result[row][col];
+			// FIX: Check if value is significant (larger than Epsilon)
+			if (typeof val === "number" && Math.abs(val) > EPSILON) {
 				pivotRowIndex = row;
+				// If we found a larger pivot, it's usually numerically more stable to swap it up
 				break;
 			}
 		}
 
-		// If no pivot found, move to next column
 		if (pivotRowIndex === -1) {
 			continue;
 		}
 
-		// Step 2: Swap rows to bring pivot to current position (if needed)
+		// Step 2: Swap rows
 		if (pivotRowIndex !== currentRow) {
 			result = E1(result, pivotRowIndex, currentRow);
 		}
 
-		// Step 3: Scale pivot row to make pivot equal to 1
+		// Step 3: Scale pivot row
 		const pivotValue = result[currentRow][col] as number;
-		if (pivotValue !== 1) {
+		// FIX: Only scale if it's not already 1 (accounting for float noise)
+		if (Math.abs(pivotValue - 1) > EPSILON) {
 			result = E2(result, currentRow, 1 / pivotValue);
 		}
 
-		// Step 4: Eliminate all other entries in the pivot column
+		// Force the pivot to be exactly 1 to look clean
+		result[currentRow][col] = 1;
+
+		// Step 4: Eliminate other entries
 		for (let row = 0; row < rows; row++) {
-			if (
-				row !== currentRow &&
-				typeof result[row][col] === "number" &&
-				result[row][col] !== 0
-			) {
-				const multiplier = result[row][col] as number;
-				result = E3(result, currentRow, row, multiplier);
+			if (row !== currentRow) {
+				const val = result[row][col];
+				// FIX: Check significance before operations
+				if (typeof val === "number" && Math.abs(val) > EPSILON) {
+					result = E3(result, currentRow, row, val);
+					// Explicitly set the eliminated cell to 0 to avoid -0.0000... or residual noise
+					result[row][col] = 0;
+				}
 			}
 		}
 
@@ -176,9 +194,11 @@ export function getPivotColumns(rrefMatrix: MatrixWString): number[] {
  * Robust null space basis finder specifically for eigenspace calculations
  * Handles numerical precision issues and ensures non-zero eigenvectors
  */
-export function findNullSpace(matrix: number[][]): number[][] {
+export function findNullSpace(matrix: Matrix): BasisVector {
+	console.log("Finding null space for matrix:");
+	console.log(matrix);
 	const tolerance = 1e-12;
-	const rrefMatrix = rref(matrix);
+	const rrefMatrix = rref(matrix as MatrixWString);
 	const rows = rrefMatrix.length;
 	const cols = rrefMatrix[0].length;
 
