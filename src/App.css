@@ -17,9 +17,11 @@ button:focus {
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -28,6 +30,7 @@ button:focus {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -47,15 +50,20 @@ button:focus {
   color: #888;
 }
 
-h1,h2,h3,h4,h5,h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Cubano', Tahoma, Geneva, Verdana, sans-serif;
   color: white;
 }
 
 .visualization-container {
-    padding: 1em;
-    margin: 0 auto;
-    max-width: 1200px;
+  padding: 1em;
+  margin: 0 auto;
+  max-width: 1200px;
 }
 
 .visualization-section {
@@ -84,10 +92,10 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 @media screen and (max-width: 600px) {
-    .visualization-section {
-        padding: 0 1em;
-    }
-    
+  .visualization-section {
+    padding: 0 1em;
+  }
+
 }
 
 .visualization-info {
@@ -104,66 +112,66 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .katex * {
-    color: white;
+  color: white;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Card ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(100, 108, 255, 0.2);
-    transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(100, 108, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 .card {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 16px;
-    padding: 2.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease; 
-    animation: fadeInUp 0.6s ease-out;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 @media screen and (max-width: 600px) {
-    .card {
-        padding: 0.5em;
-        margin: 0;
-    }
-    
+  .card {
+    padding: 0.5em;
+    margin: 0;
+  }
+
 }
 
 /* Animation for scroll-in effects */
 @keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .about-section {
-    animation: fadeInUp 0.6s ease-out;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .about-section:nth-child(even) {
-    animation-delay: 0.1s;
+  animation-delay: 0.1s;
 }
 
 .dynamix-latex .katex-display .katex .katex-html {
-    display: flex;
-    position: relative;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.4em 0;
+  display: flex;
+  position: relative;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4em 0;
 }
 
 
 /* add transition to everything to make it smoother */
 * {
-    transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
 }

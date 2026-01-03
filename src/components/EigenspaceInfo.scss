@@ -1,96 +1,96 @@
 .eigenspace-info {
-    margin: 20px 0;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 20px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 
-    h3 {
-        margin: 0 0 15px 0;
-        font-size: 1.2em;
-    }
+  h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.2em;
+  }
 }
 
 .eigenspace-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .eigenspace-row {
-    background: rgba(100, 108, 255, 0.1);
-    border: 1px solid rgba(100, 108, 255, 0.2);
-    border-radius: 6px;
-    padding: 15px;
+  background: rgba(100, 108, 255, 0.1);
+  border: 1px solid rgba(100, 108, 255, 0.2);
+  border-radius: 6px;
+  padding: 15px;
 }
 
 .eigenspace-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .eigenspace-color-indicator {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .eigenvalue-label {
-    font-weight: bold;
-    font-size: 1.1em;
-    min-width: 80px;
+  font-weight: bold;
+  font-size: 1.1em;
+  min-width: 80px;
 }
 
 .eigenspace-type {
-    font-style: italic;
-    font-size: 0.9em;
+  font-style: italic;
+  font-size: 0.9em;
 }
 
 .eigenspace-basis {
-    margin-top: 8px;
+  margin-top: 8px;
 }
 
 .basis-label {
-    font-weight: 500;
-    margin-right: 8px;
-    font-size: 0.9em;
+  font-weight: 500;
+  margin-right: 8px;
+  font-size: 0.9em;
 }
 
 .basis-vectors {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
 }
 
 .basis-vector {
-    background: #585b7587;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9em;
+  background: #585b7587;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
 }
 
 @media (max-width: 768px) {
-    .eigenspace-info {
-        padding: 15px;
-    }
+  .eigenspace-info {
+    padding: 15px;
+  }
 
-    .eigenspace-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
+  .eigenspace-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
 
-    .basis-vectors {
-        flex-direction: column;
-    }
+  .basis-vectors {
+    flex-direction: column;
+  }
 
-    .basis-vector {
-        font-size: 0.8em;
-    }
+  .basis-vector {
+    font-size: 0.8em;
+  }
 }

@@ -2,12 +2,16 @@ import React from "react";
 import MathDisplay from "./util/MathDisplay";
 import "./About.scss";
 
-const MemberCard : React.FC<{ Fname: string, Lname: string, path: string }> = ({ Fname, Lname, path }) => (
-    <div className="member-card">
-        <img src={path} alt={`${Fname} ${Lname}`} className="member-photo" />
-        <h3 style={{margin: 0}}>{Lname}</h3>
-        <p style={{ margin: 0 }}>{Fname}</p>
-    </div>
+const MemberCard: React.FC<{ Fname: string; Lname: string; path: string }> = ({
+	Fname,
+	Lname,
+	path,
+}) => (
+	<div className="member-card">
+		<img src={path} alt={`${Fname} ${Lname}`} className="member-photo" />
+		<h3 style={{ margin: 0 }}>{Lname}</h3>
+		<p style={{ margin: 0 }}>{Fname}</p>
+	</div>
 );
 
 const About: React.FC = () => {
@@ -22,21 +26,42 @@ const About: React.FC = () => {
 				</header>
 
 				<div className="about-sections">
-                    <section className="about-section">
-                        <div className="about-sections">
-                    <div>
-                    <h2>👥 Team Members</h2>
-                    <h3 style={{display: "inline"}}>Section: </h3><p style={{display: "inline"}}>BSCS 2-2</p>
-                    </div>
-                    <div className="members-grid">
-                        <MemberCard Fname="Eliazar" Lname="INSO" path="/profiles/inso.jpg" />
-                        <MemberCard Fname="Mark Elijah" Lname="SEVILLA" path="/profiles/sevilla.jpg" />
-                        <MemberCard Fname="Jan Earl" Lname="RODRIGUEZ" path="/profiles/rodriguez.jpg" />
-                        <MemberCard Fname="Hanzlei" Lname="JAMISON" path="/profiles/jamison.jpg" />
-                        <MemberCard Fname="Mariel" Lname="OLIVEROS" path="/profiles/oliveros.jpg" />
-                    </div>
-                </div>
-                    </section>
+					<section className="about-section">
+						<div className="about-sections">
+							<div>
+								<h2>👥 Team Members</h2>
+								<h3 style={{ display: "inline" }}>Section: </h3>
+								<p style={{ display: "inline" }}>BSCS 2-2</p>
+							</div>
+							<div className="members-grid">
+								<MemberCard
+									Fname="Eliazar"
+									Lname="INSO"
+									path="/profiles/inso.jpg"
+								/>
+								<MemberCard
+									Fname="Mark Elijah"
+									Lname="SEVILLA"
+									path="/profiles/sevilla.jpg"
+								/>
+								<MemberCard
+									Fname="Jan Earl"
+									Lname="RODRIGUEZ"
+									path="/profiles/rodriguez.jpg"
+								/>
+								<MemberCard
+									Fname="Hanzlei"
+									Lname="JAMISON"
+									path="/profiles/jamison.jpg"
+								/>
+								<MemberCard
+									Fname="Mariel"
+									Lname="OLIVEROS"
+									path="/profiles/oliveros.jpg"
+								/>
+							</div>
+						</div>
+					</section>
 
 					<section className="about-section">
 						<h2>🎯 What is Solinjaro?</h2>
@@ -52,9 +77,9 @@ const About: React.FC = () => {
 						<h2>📐 Mathematical Foundation</h2>
 						<p>
 							For a square matrix <MathDisplay latex="A" />, eigenvalues{" "}
-							<MathDisplay latex="\lambda" />&nbsp;
-							and eigenvectors <MathDisplay latex="\vec{v}" /> satisfy the
-							fundamental equation:
+							<MathDisplay latex="\lambda" />
+							&nbsp; and eigenvectors <MathDisplay latex="\vec{v}" /> satisfy
+							the fundamental equation:
 						</p>
 						<div className="math-highlight">
 							<MathDisplay latex="A\vec{v} = \lambda\vec{v}" block />

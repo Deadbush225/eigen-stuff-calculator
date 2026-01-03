@@ -1,7 +1,7 @@
-import { type Complex } from 'mathjs';
+import { type Complex } from "mathjs";
 
 export type BasisVector = (string | number)[][];
 export type Eigenspace = {
-    eigenvalue: number | Complex;
-    basis: BasisVector;
+	eigenvalue: number | Complex;
+	basis: BasisVector;
 };
