@@ -30,7 +30,8 @@ const EigenvalueSolution: React.FC<EigenvalueSolutionProps> = memo(
 				return {
 					solution: (
 						<div className="error">
-							Error calculating eigenvalues: {(error as Error).message}
+							Error calculating eigenvalues: {(error as Error).message} 
+              {(error as Error).stack}
 						</div>
 					),
 					eigenspaces: [],

@@ -1,4 +1,5 @@
 import { math } from "../math";
+import { calculateDeterminant } from "../matrixOperations";
 
 type PolynomialCoefficients = number[];
 
@@ -6,8 +7,14 @@ type PolynomialCoefficients = number[];
  * Helper function to validate eigenvalues manually
  * For each eigenvalue λ, verify that det(A - λI) ≈ 0
  */
-export function validateEigenvalues(eigenvalues: number[]): number[] {
+export function validateEigenvalues(
+	matrix: number[][],
+	eigenvalues: number[]
+): number[] {
 	const EPSILON = 1e-6;
+	if (eigenvalues === undefined) {
+		return [];
+	}
 
 	// 1. Snap values to nearby integers or zero
 	const snapped = eigenvalues.map((ev) => {
@@ -21,7 +28,7 @@ export function validateEigenvalues(eigenvalues: number[]): number[] {
 
 	// 2. Remove duplicates using the same threshold
 	// We use reduce to build an array of unique values
-	return snapped.reduce<number[]>((acc, current) => {
+	const dedupped = snapped.reduce<number[]>((acc, current) => {
 		const isDuplicate = acc.some(
 			(uniqueVal) => Math.abs(uniqueVal - current) < EPSILON
 		);
@@ -31,6 +38,41 @@ export function validateEigenvalues(eigenvalues: number[]): number[] {
 		}
 		return acc;
 	}, []);
+
+	// 3. Validate each eigenvalue by checking det(A - λI) ≈ 0
+	return dedupped.filter((ev) => {
+		const detValue = calculateCharacteristicValue(matrix, ev);
+		const p = Math.abs(detValue) < EPSILON;
+		console.log(
+			`Eigenvalue ${ev} validation: det(A - ${ev}I) ≈ 0 is ${p}, because det = ${detValue}`
+		);
+		return p;
+	});
+}
+
+/**
+ * Calculate det(A - λI) for a specific λ value
+ */
+function calculateCharacteristicValue(
+	matrix: number[][],
+	lambda: number
+): number {
+	const n = matrix.length;
+	const AMinusLambdaI: number[][] = [];
+
+	// Create A - λI matrix
+	for (let i = 0; i < n; i++) {
+		AMinusLambdaI[i] = [];
+		for (let j = 0; j < n; j++) {
+			if (i === j) {
+				AMinusLambdaI[i][j] = matrix[i][j] - lambda;
+			} else {
+				AMinusLambdaI[i][j] = matrix[i][j];
+			}
+		}
+	}
+
+	return calculateDeterminant(AMinusLambdaI);
 }
 
 /**
@@ -40,6 +82,7 @@ export function validateEigenvalues(eigenvalues: number[]): number[] {
  * @returns Array of real roots
  */
 export function solveRealRoots(
+	matrix: number[][],
 	inputCoeffs: PolynomialCoefficients,
 	poly: string
 ): number[] {
@@ -82,11 +125,12 @@ export function solveRealRoots(
 
 	if (coeffs.length === 4) {
 		// Cubic: use exact formula
-		return validateEigenvalues(solveCubicOptimized(coeffs));
+		return validateEigenvalues(matrix, solveCubicOptimized(coeffs));
 	}
 
 	// For higher degree polynomials, use optimized Newton-Raphson
 	const eigenvalues: number[] = validateEigenvalues(
+		matrix,
 		optimizedNewtonRaphson(poly, coeffs)
 	);
 

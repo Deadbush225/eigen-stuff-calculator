@@ -98,3 +98,24 @@ function qrDecomposition(A: number[][]): { Q: number[][]; R: number[][] } {
 
 	return { Q, R };
 }
+
+/**
+ * Find eigenvalues using diagonalization method
+ * Uses QR algorithm or power iteration for numerical eigenvalue computation
+ */
+export function findEigenvaluesByDiagonalization(matrix: number[][]): number[] {
+	console.log("=== DIAGONALIZATION METHOD ===");
+	console.log("Input matrix:", matrix);
+
+	try {
+		// QR Algorithm (most robust) out of others
+		const qrEigenvalues = qrAlgorithm(matrix);
+		if (qrEigenvalues.length > 0) {
+			console.log("QR Algorithm found eigenvalues:", qrEigenvalues);
+			return qrEigenvalues;
+		}
+	} catch (error) {
+		console.warn("QR Algorithm failed:", error);
+	}
+	return [];
+}

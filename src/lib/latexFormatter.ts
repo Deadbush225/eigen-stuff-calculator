@@ -136,8 +136,42 @@ function coefficientToPolynomial(coefficients: number[]): string {
 	return polynomial;
 }
 
+/**
+ * Format the xI - A matrix for display
+ */
+function formatXIMinusAMatrix(xIMinusA: (string | number)[][]): string {
+	let result = "xI - A =\n";
+
+	// Find first the maximum width of each column for alignment
+	const colWidths: number[] = [];
+	for (let j = 0; j < xIMinusA[0].length; j++) {
+		let maxWidth = 0;
+		for (let i = 0; i < xIMinusA.length; i++) {
+			const cellLength = String(xIMinusA[i][j]).length;
+			if (cellLength > maxWidth) {
+				maxWidth = cellLength;
+			}
+		}
+		colWidths[j] = maxWidth;
+	}
+
+	// Build formatted string with aligned columns
+	for (let i = 0; i < xIMinusA.length; i++) {
+		let row = "| ";
+		for (let j = 0; j < xIMinusA[i].length; j++) {
+			row += String(xIMinusA[i][j]).padEnd(colWidths[j] + 1);
+			if (j < xIMinusA[i].length - 1) row += "\t";
+		}
+		row += " |";
+		result += row + "\n";
+	}
+
+	return result;
+}
+
 export {
 	formatMatrixLatex,
+	formatXIMinusAMatrix,
 	formatExpressionLatex,
 	formatEigenvaluesLatex,
 	cleanExpressionLatex,
