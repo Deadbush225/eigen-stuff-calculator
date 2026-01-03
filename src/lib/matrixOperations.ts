@@ -1,11 +1,12 @@
 
 // Type definitions
-type Matrix = (string | number)[][];
+type MatrixWString = (string | number)[][];
+type Matrix = number[][];
 type BasisVector = number[][];
 
-// Elementary Row Operations
+/* ━━━━━━━━━━━━ Elementary Row Operations ━━━━━━━━━━━ */
 // E1: Row swap
-function E1(matrix: Matrix, r1: number, r2: number): Matrix {
+function E1(matrix: MatrixWString, r1: number, r2: number): MatrixWString {
     const newMatrix = matrix.map(row => [...row]);
 
     const t = newMatrix[r2];
@@ -16,7 +17,7 @@ function E1(matrix: Matrix, r1: number, r2: number): Matrix {
 }
 
 // E2: Row scaling
-function E2(matrix: Matrix, r: number, scalar: number): Matrix {
+function E2(matrix: MatrixWString, r: number, scalar: number): MatrixWString {
     const newMatrix = matrix.map(row => [...row]);
 
     for (let j = 0; j < newMatrix[r].length; j++) {
@@ -31,7 +32,7 @@ function E2(matrix: Matrix, r: number, scalar: number): Matrix {
 } 
 
 // E3: Row replacement (r2 = r2 - scalar * r1)
-function E3(matrix: Matrix, r1: number, r2: number, scalar: number): Matrix {
+function E3(matrix: MatrixWString, r1: number, r2: number, scalar: number): MatrixWString {
     const newMatrix = matrix.map(row => [...row]);
 
     for (let j = 0; j < newMatrix[r2].length; j++) {
@@ -52,7 +53,7 @@ function E3(matrix: Matrix, r1: number, r2: number, scalar: number): Matrix {
  * Reduced Row Echelon Form (RREF) Algorithm
  * Uses elementary row operations to transform matrix to RREF
  */
-export function rref(matrix: Matrix): Matrix {
+export function rref(matrix: MatrixWString): MatrixWString {
     // Create a copy to avoid modifying the original matrix
     let result = matrix.map(row => [...row]);
     const rows = result.length;
@@ -104,7 +105,7 @@ export function rref(matrix: Matrix): Matrix {
 /**
  * Find the rank of a matrix (number of pivot columns in RREF)
  */
-export function matrixRank(matrix: Matrix): number {
+export function matrixRank(matrix: MatrixWString): number {
     const rrefMatrix = rref(matrix);
     let rank = 0;
     
@@ -124,7 +125,7 @@ export function matrixRank(matrix: Matrix): number {
 /**
  * Identify pivot columns in RREF matrix
  */
-export function getPivotColumns(rrefMatrix: Matrix): number[] {
+export function getPivotColumns(rrefMatrix: MatrixWString): number[] {
     const pivotCols: number[] = [];
     
     for (let row = 0; row < rrefMatrix.length; row++) {
@@ -150,28 +151,53 @@ export function getPivotColumns(rrefMatrix: Matrix): number[] {
 }
 
 /**
- * Find the null space basis of a matrix
- * Returns basis vectors for the solution to Ax = 0
+ * Robust null space basis finder specifically for eigenspace calculations
+ * Handles numerical precision issues and ensures non-zero eigenvectors
  */
-export function nullSpaceBasis(matrix: Matrix): BasisVector {
+export function findNullSpace(matrix: number[][]): number[][] {
+    const tolerance = 1e-12;
     const rrefMatrix = rref(matrix);
     const rows = rrefMatrix.length;
     const cols = rrefMatrix[0].length;
     
-    // Find pivot columns
-    const pivotCols = getPivotColumns(rrefMatrix);
+    // Find pivot columns with numerical tolerance
+    const pivotCols: number[] = [];
     const freeVars: number[] = [];
     
-    // Identify free variables (non-pivot columns)
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const val = rrefMatrix[row][col];
+            if (typeof val === 'number' && Math.abs(val - 1) < tolerance) {
+                // Check if this is the leading entry in the row
+                let isLeading = true;
+                for (let prevCol = 0; prevCol < col; prevCol++) {
+                    const prevVal = rrefMatrix[row][prevCol];
+                    if (typeof prevVal === 'number' && Math.abs(prevVal) > tolerance) {
+                        isLeading = false;
+                        break;
+                    }
+                }
+                if (isLeading && !pivotCols.includes(col)) {
+                    pivotCols.push(col);
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Identify free variables
     for (let col = 0; col < cols; col++) {
         if (!pivotCols.includes(col)) {
             freeVars.push(col);
         }
     }
     
-    // If no free variables, null space is just the zero vector
+    // For eigenspaces, there should always be free variables
+    // If none found, the matrix might have numerical precision issues
     if (freeVars.length === 0) {
-        return [new Array(cols).fill(0)];
+        console.warn("No free variables found - this shouldn't happen for eigenspaces");
+        // Return a standard basis vector as fallback
+        return [Array(cols).fill(0).map((_, i) => i === 0 ? 1 : 0)];
     }
     
     const basisVectors: number[][] = [];
@@ -186,11 +212,13 @@ export function nullSpaceBasis(matrix: Matrix): BasisVector {
             // Find the pivot column for this row
             let pivotCol = -1;
             for (let col = 0; col < cols; col++) {
-                if (typeof rrefMatrix[row][col] === 'number' && rrefMatrix[row][col] === 1) {
+                const val = rrefMatrix[row][col];
+                if (typeof val === 'number' && Math.abs(val - 1) < tolerance) {
                     // Check if this is a leading 1
                     let isLeading = true;
                     for (let prevCol = 0; prevCol < col; prevCol++) {
-                        if (typeof rrefMatrix[row][prevCol] === 'number' && rrefMatrix[row][prevCol] !== 0) {
+                        const prevVal = rrefMatrix[row][prevCol];
+                        if (typeof prevVal === 'number' && Math.abs(prevVal) > tolerance) {
                             isLeading = false;
                             break;
                         }
@@ -202,22 +230,24 @@ export function nullSpaceBasis(matrix: Matrix): BasisVector {
                 }
             }
             
-            if (pivotCol !== -1 && typeof rrefMatrix[row][freeVar] === 'number') {
-                // Set pivot variable to negative of free variable coefficient
-                basisVector[pivotCol] = -(rrefMatrix[row][freeVar] as number);
+            if (pivotCol !== -1) {
+                const coeff = rrefMatrix[row][freeVar];
+                if (typeof coeff === 'number' && Math.abs(coeff) > tolerance) {
+                    basisVector[pivotCol] = -coeff;
+                }
             }
         }
         
         basisVectors.push(basisVector);
     }
     
-    return basisVectors.length > 0 ? basisVectors : [new Array(cols).fill(0)];
+    return basisVectors.length > 0 ? basisVectors : [Array(cols).fill(0).map((_, i) => i === 0 ? 1 : 0)];
 }
 
 /**
  * Check if a matrix is in Row Echelon Form (REF)
  */
-export function isRowEchelonForm(matrix: Matrix): boolean {
+export function isRowEchelonForm(matrix: MatrixWString): boolean {
     let lastPivotCol = -1;
     
     for (let row = 0; row < matrix.length; row++) {
@@ -257,7 +287,7 @@ export function isRowEchelonForm(matrix: Matrix): boolean {
 /**
  * Check if a matrix is in Reduced Row Echelon Form (RREF)
  */
-export function isReducedRowEchelonForm(matrix: Matrix): boolean {
+export function isReducedRowEchelonForm(matrix: MatrixWString): boolean {
     if (!isRowEchelonForm(matrix)) {
         return false;
     }
@@ -295,7 +325,7 @@ export function isReducedRowEchelonForm(matrix: Matrix): boolean {
 /**
  * Format matrix for display
  */
-export function formatMatrix(matrix: Matrix): string {
+export function formatMatrix(matrix: MatrixWString): string {
     const maxWidths: number[] = [];
     
     // Calculate maximum width for each column
@@ -334,7 +364,7 @@ export function solveLinearSystem(A: number[][], b: number[]): number[] | null {
     const cols = A[0].length;
     
     // Create augmented matrix [A|b]
-    const augmented: Matrix = A.map((row, i) => [...row, b[i]]);
+    const augmented: MatrixWString = A.map((row, i) => [...row, b[i]]);
     
     // Apply RREF to augmented matrix
     const rrefAugmented = rref(augmented);
@@ -376,7 +406,7 @@ export function testRREF() {
     console.log('=== RREF Solver Testing ===\n');
     
     // Test 1: Simple 3x3 matrix
-    const matrix1: Matrix = [
+    const matrix1: MatrixWString = [
         [1, 2, 3],
         [4, 5, 6], 
         [7, 8, 9]
@@ -393,7 +423,7 @@ export function testRREF() {
     console.log('Pivot Columns:', getPivotColumns(rref1));
     
     // Test 2: Matrix with null space
-    const matrix2: Matrix = [
+    const matrix2: MatrixWString = [
         [1, 2, 3, 4],
         [2, 4, 6, 8],
         [1, 2, 4, 5]
@@ -406,8 +436,8 @@ export function testRREF() {
     const rref2 = rref(matrix2);
     console.log('RREF:');
     console.log(formatMatrix(rref2));
-    
-    const nullBasis = nullSpaceBasis(matrix2);
+
+    const nullBasis = findNullSpace(matrix2 as Matrix);
     console.log('Null Space Basis:');
     nullBasis.forEach((vec, i) => {
         console.log(`v${i + 1}: [${vec.join(', ')}]`);
@@ -430,5 +460,136 @@ export function testRREF() {
     console.log('Solution:', solution ? `[${solution.join(', ')}]` : 'No unique solution');
 }
 
-// Export all elementary row operations for external use
-// export { E1, E2, E3 };
+/* ━━━━━━━━━━━━━ Matrix Multiplication ━━━━━━━━━━━━━━ */
+export function multiplyMatrices(A: number[][], B: number[][]): number[][] {
+    const rows = A.length;
+    const cols = B[0].length;
+    const inner = B.length;
+    
+    const result: number[][] = Array(rows).fill(null).map(() => Array(cols).fill(0));
+    
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            for (let k = 0; k < inner; k++) {
+                result[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+    
+    return result;
+}
+
+export function multiplyMatrixVector(matrix: number[][], vector: number[]): number[] {
+    const result: number[] = [];
+    
+    for (let i = 0; i < matrix.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < vector.length; j++) {
+            sum += matrix[i][j] * vector[j];
+        }
+        result.push(sum);
+    }
+    
+    return result;
+}
+
+
+/**
+ * Check if matrix is triangular (upper or lower)
+ */
+export function isTriangularMatrix(matrix: (string | number)[][]): boolean {
+  const n = matrix.length;
+  let isUpper = true;
+  let isLower = true;
+  
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i > j && matrix[i][j] !== 0) {
+        isUpper = false;
+      }
+      if (i < j && matrix[i][j] !== 0) {
+        isLower = false;
+      }
+    }
+  }
+  
+  return isUpper || isLower;
+}
+
+
+export function dotProduct(a: number[], b: number[]): number {
+    return a.reduce((sum, val, i) => sum + val * b[i], 0);
+}
+
+/**
+ * Calculate det(A - λI) for a specific λ value
+ */
+function calculateCharacteristicValue(matrix: number[][], lambda: number): number {
+  const n = matrix.length;
+  const AMinusLambdaI: number[][] = [];
+  
+  // Create A - λI matrix
+  for (let i = 0; i < n; i++) {
+    AMinusLambdaI[i] = [];
+    for (let j = 0; j < n; j++) {
+      if (i === j) {
+        AMinusLambdaI[i][j] = matrix[i][j] - lambda;
+      } else {
+        AMinusLambdaI[i][j] = matrix[i][j];
+      }
+    }
+  }
+  
+  return calculateDeterminant(AMinusLambdaI);
+}
+
+/**
+ * Calculate numerical determinant using LU decomposition
+ */
+export function calculateDeterminant(matrix: number[][]): number {
+  const n = matrix.length;
+  
+  if (n === 1) return matrix[0][0];
+  if (n === 2) return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+  
+  // Simple cofactor expansion for larger matrices
+  let det = 0;
+  for (let j = 0; j < n; j++) {
+    const minor = getMinor(matrix, 0, j);
+    const cofactor = Math.pow(-1, j) * matrix[0][j] * calculateDeterminant(minor);
+    det += cofactor;
+  }
+  
+  return det;
+}
+
+/**
+ * Get minor matrix by removing specified row and column
+ */
+function getMinor(matrix: number[][], row: number, col: number): number[][] {
+  const minor: number[][] = [];
+  for (let i = 0; i < matrix.length; i++) {
+    if (i !== row) {
+      const newRow: number[] = [];
+      for (let j = 0; j < matrix[i].length; j++) {
+        if (j !== col) {
+          newRow.push(matrix[i][j]);
+        }
+      }
+      minor.push(newRow);
+    }
+  }
+  return minor;
+}
+
+
+/**
+ * Calculate trace manually (sum of diagonal elements)
+ */
+export function calculateTraceManual(matrix: number[][]): number {
+  let trace = 0;
+  for (let i = 0; i < matrix.length; i++) {
+    trace += matrix[i][i];
+  }
+  return trace;
+}

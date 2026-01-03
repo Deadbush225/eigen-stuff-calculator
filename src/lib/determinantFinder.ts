@@ -28,8 +28,12 @@ function getMinor(matrix: (string | number)[][], rowToRemove: number, colToRemov
  * Main recursive function for N >= 3
  * Handles 3x3, 4x4, 5x5, etc. using proper bracket sizing and recursion.
  */
-export function calculateLargerDeterminant(matrix: (string | number)[][], depth: number = 0): LatexString {
+export function assembleNbyNDeterminantExpression(matrix: (string | number)[][], depth: number = 0): LatexString {
   const n = matrix.length;
+
+  if (n == 1) {
+    return matrix[0][0].toString();
+  }
 
   // Base Case: 2x2
   if (n === 2) {
@@ -52,7 +56,7 @@ export function calculateLargerDeterminant(matrix: (string | number)[][], depth:
     const minor = getMinor(matrix, 0, j);
     
     // Recursive Step
-    const minorDet = calculateLargerDeterminant(minor, depth + 1);
+    const minorDet = assembleNbyNDeterminantExpression(minor, depth + 1);
 
     if (minorDet === "") continue;
 
@@ -67,9 +71,4 @@ export function calculateLargerDeterminant(matrix: (string | number)[][], depth:
   const separator = depth === 0 ? ' \\newline ' : ' ';
   
   return terms.join(separator);
-}
-
-// Re-export 3x3 wrapper for backward compatibility if needed
-export function calculate3x3Determinant(matrix: (string | number)[][]): LatexString {
-  return calculateLargerDeterminant(matrix, 2); // Start at depth 2 (Bigl size)
 }

@@ -49,22 +49,15 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
     onMatrixChange?.(newMatrix);
   }, [matrix, onMatrixChange]);
 
-  const getColumnAsVertex = (colIndex: number): number[] => {
-    return matrix.map(row => row[colIndex]);
-  };
-
   onMatrixChange?.(matrix);
 
   const renderMatrix = () => (
-    
-
     <div className="container card">
         <Bracket direction="left" height={size * 40} />
         <div className="matrix-grid">
         {Array(size).fill(null).map((_, col) => (
             <div key={col} className="matrix-column">
                 {matrix.map((row, rowIdx) => {
-                    // let v = row[col] || 0;
                     const cellStr = f_matrix[rowIdx]?.[col] ?? '';
                     return (
                         <input
@@ -97,32 +90,6 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
     </div>
   );
 
-  const renderVertices = () => (
-    <div className="vertices-container">
-      <h3>Column Vertices</h3>
-      <div className="vertices-grid">
-        {Array(size).fill(null).map((_, colIndex) => {
-          const vertex = getColumnAsVertex(colIndex);
-          return (
-            <div key={colIndex} className="vertex">
-              <h4>v<sub>{colIndex + 1}</sub></h4>
-              <div className="vertex-values">
-                [
-                {vertex.map((value, i) => (
-                  <span key={i} className="vertex-component">
-                    {value}
-                    {i < vertex.length - 1 && ', '}
-                  </span>
-                ))}
-                ]
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-
   return (
     <div className="matrix-input-container">
       <div className="controls">
@@ -135,7 +102,6 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
             min="1"
             max="5"
             value={f_size}
-            // onChange={(e) => setSize(parseInt(e.target.value))}
             onChange={(e) => {
                 const newSize = parseInt(e.target.value);
                 setF_Size(newSize);
@@ -151,13 +117,8 @@ function MatrixInput({ onMatrixChange, onEigenspacesChange }: MatrixInputProps) 
       <div className="matrix-section">
         <h3>Matrix ({size}×{size})</h3>
         {renderMatrix()}
-        {/* <button className="apply-button" onClick={() => {
-            updateMatrixSize(parseInt(document.getElementById('matrix-size')?.value || '3'));
-        }}>Apply Matrix</button> */}
       </div>
 
-      {/* {renderVertices()} */}
-      
       <EigenvalueSolution matrix={matrix} onEigenspacesCalculated={handleEigenspacesCalculated} />
     </div>
   );
