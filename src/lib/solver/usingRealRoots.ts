@@ -1,4 +1,4 @@
-import { math } from "./math";
+import { math } from "../math";
 
 type PolynomialCoefficients = number[];
 
@@ -86,7 +86,7 @@ export function solveRealRoots(
 	}
 
 	// For higher degree polynomials, use optimized Newton-Raphson
-	let eigenvalues: number[] = validateEigenvalues(
+	const eigenvalues: number[] = validateEigenvalues(
 		optimizedNewtonRaphson(poly, coeffs)
 	);
 

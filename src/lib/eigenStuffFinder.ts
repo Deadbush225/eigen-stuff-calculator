@@ -1,14 +1,12 @@
 import { type Complex } from "mathjs";
 import {
-	formatMatrix,
-	multiplyMatrices,
-	dotProduct,
 	calculateDeterminant,
 	calculateTraceManual,
 	findNullSpace,
 	isTriangularMatrix,
 } from "./matrixOperations";
-import { solveRealRoots, validateEigenvalues } from "./realRootsSolver";
+import { solveRealRoots, validateEigenvalues } from "./solver/usingRealRoots";
+import { qrAlgorithm } from "./solver/usingDiagonalization";
 import { math, type characteristicPolynomial } from "./math";
 import {
 	calculateTriangularDeterminant,
@@ -90,52 +88,52 @@ function solveCharacteristicPolynomial(
 	inputMatrix: number[][]
 ): { polynomial: string; eigenvalues: (number | Complex)[] } {
 	const coeff = determinantExpr.coefficients as number[];
-
-	console.log("USING MATHJS POLY ROOT");
-	console.log(coeff.reverse());
+	const n = inputMatrix.length;
+	if (n < 1 || n > 5) {
+		throw new Error(
+			"Matrix size not supported for manual eigenvalue calculation."
+		);
+	}
 
 	// use numerical approach for n = 1 to 3
 	let roots: number[] = [];
-	if (coeff.length <= 4) {
+	if (n <= 3) {
+		console.log("USING MATHJS POLY ROOT");
+		console.log(coeff.reverse());
 		roots = solveRealRoots(
 			coeff.reverse() as number[],
 			determinantExpr.expression.toString()
 		);
-	} else {
-		console.log("Newton-Raphson method failed to find roots");
+	} else if (roots.length === 0) {
+		console.log(
+			"🟨 Newton-Raphson method will take too long, using diagonalization method"
+		);
 
-		// For 4x4 and 5x5 matrices, try diagonalization method
-		if (inputMatrix.length === 4 || inputMatrix.length === 5) {
-			console.log(
-				`Matrix size: ${inputMatrix.length}x${inputMatrix.length}, attempting diagonalization method...`
-			);
-
-			try {
-				const diagonalizationRoots =
-					findEigenvaluesByDiagonalization(inputMatrix);
-				if (diagonalizationRoots.length > 0) {
-					console.log(
-						"✓ Diagonalization method successful:",
-						diagonalizationRoots
-					);
-					roots = validateEigenvalues(diagonalizationRoots);
-				} else {
-					console.log("❌ Diagonalization method also failed");
-				}
-			} catch (error) {
-				console.warn("Diagonalization method failed:", error);
+		try {
+			const diagonalizationRoots =
+				findEigenvaluesByDiagonalization(inputMatrix);
+			if (diagonalizationRoots.length > 0) {
+				console.log(
+					"🟩 Diagonalization method successful:",
+					diagonalizationRoots
+				);
+				roots = validateEigenvalues(diagonalizationRoots);
+			} else {
+				console.log("🟥 Diagonalization method also failed");
 			}
+		} catch (error) {
+			console.warn("🟥 Diagonalization method failed:", error);
 		}
 
-		// Final fallback: math.js eigs()
+		// Final fallback: use math.js library for eigs()
 		if (roots.length === 0) {
-			console.log("Using math.js eigs() as final fallback...");
+			console.log("🟨 Using math.js eigs() as final fallback...");
 			try {
 				const mathjsRoots = math.eigs(inputMatrix).values;
 				roots = mathjsRoots as number[];
-				console.log("✓ math.js eigs() successful:", roots);
+				console.log("🟩 math.js eigs() successful:", roots);
 			} catch (error) {
-				console.error("Even math.js eigs() failed:", error);
+				console.error("🟥 Even math.js eigs() failed:", error);
 				roots = [];
 			}
 		}
@@ -166,105 +164,6 @@ function findEigenvaluesByDiagonalization(matrix: number[][]): number[] {
 		console.warn("QR Algorithm failed:", error);
 	}
 	return [];
-}
-
-/**
- * QR Algorithm for eigenvalue computation
- */
-function qrAlgorithm(
-	A: number[][],
-	maxIterations = 100,
-	tolerance = 1e-10
-): number[] {
-	const n = A.length;
-	let Ak = A.map((row) => [...row]); // Copy matrix
-
-	for (let iter = 0; iter < maxIterations; iter++) {
-		// QR decomposition
-		const { Q, R } = qrDecomposition(Ak);
-
-		// Update: A_{k+1} = R * Q
-		Ak = multiplyMatrices(R, Q);
-
-		// Check convergence (off-diagonal elements should approach 0)
-		let converged = true;
-		for (let i = 0; i < n; i++) {
-			for (let j = 0; j < n; j++) {
-				if (i !== j && Math.abs(Ak[i][j]) > tolerance) {
-					converged = false;
-					break;
-				}
-			}
-			if (!converged) break;
-		}
-
-		if (converged) {
-			console.log(`QR Algorithm converged in ${iter + 1} iterations`);
-			break;
-		}
-	}
-
-	// Extract eigenvalues from diagonal
-	const eigenvalues: number[] = [];
-	for (let i = 0; i < n; i++) {
-		eigenvalues.push(Ak[i][i]);
-	}
-
-	return eigenvalues.filter((val) => isFinite(val));
-}
-
-/**
- * QR Decomposition using Gram-Schmidt process
- */
-function qrDecomposition(A: number[][]): { Q: number[][]; R: number[][] } {
-	const m = A.length;
-	const n = A[0].length;
-
-	const Q: number[][] = Array(m)
-		.fill(null)
-		.map(() => Array(n).fill(0));
-	const R: number[][] = Array(n)
-		.fill(null)
-		.map(() => Array(n).fill(0));
-
-	// Gram-Schmidt process
-	for (let j = 0; j < n; j++) {
-		// Get column j of A
-		const aj: number[] = [];
-		for (let i = 0; i < m; i++) {
-			aj[i] = A[i][j];
-		}
-
-		// Start with aj
-		const qj = [...aj];
-
-		// Subtract projections onto previous Q columns
-		for (let k = 0; k < j; k++) {
-			const qk: number[] = [];
-			for (let i = 0; i < m; i++) {
-				qk[i] = Q[i][k];
-			}
-
-			const projection = dotProduct(aj, qk);
-			R[k][j] = projection;
-
-			for (let i = 0; i < m; i++) {
-				qj[i] -= projection * qk[i];
-			}
-		}
-
-		// Normalize qj
-		const norm = Math.sqrt(qj.reduce((sum, val) => sum + val * val, 0));
-		R[j][j] = norm;
-
-		if (norm > 1e-15) {
-			for (let i = 0; i < m; i++) {
-				Q[i][j] = qj[i] / norm;
-			}
-		}
-	}
-
-	return { Q, R };
 }
 
 /**
@@ -335,7 +234,7 @@ function findEigenvectorBasis(
 		| string
 		| number
 	)[][];
-	console.log("xI - A matrix:", formatMatrix(xIMinusACopy));
+	// console.log("xI - A matrix:", formatMatrix(xIMinusACopy));
 
 	for (let i = 0; i < xIMinusACopy.length; i++) {
 		for (let j = 0; j < xIMinusACopy[i].length; j++) {
@@ -352,12 +251,12 @@ function findEigenvectorBasis(
 			}
 		}
 	}
-	console.log(
-		"Matrix for eigenvalue",
-		eigenvalue,
-		":",
-		formatMatrix(xIMinusACopy)
-	);
+	// console.log(
+	// 	"Matrix for eigenvalue",
+	// 	eigenvalue,
+	// 	":",
+	// 	formatMatrix(xIMinusACopy)
+	// );
 
 	// row reduce the matrix to find null space
 	const nullSpace = findNullSpace(xIMinusACopy as number[][]);
@@ -374,7 +273,7 @@ function findEigenvectorBasis(
 		);
 	}
 
-	console.log("EigenSpace Basis", formatMatrix(nullSpace));
+	// console.log("EigenSpace Basis", formatMatrix(nullSpace));
 
 	return {
 		eigenvalue,
@@ -432,7 +331,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 	// Step 4: Calculate eigenspaces for each eigenvalue
 	const eigenspaces: Eigenspace[] = [];
 	for (const val of polynomialResult.eigenvalues) {
-		console.log("Finding eigenvector basis for eigenvalue:", val);
+		// console.log("Finding eigenvector basis for eigenvalue:", val);
 		const eigenspace = findEigenvectorBasis(xIMinusA, val);
 		eigenspaces.push(eigenspace);
 	}

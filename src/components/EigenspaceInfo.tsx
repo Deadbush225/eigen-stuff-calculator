@@ -42,7 +42,6 @@ const EigenspaceInfo: React.FC<EigenspaceInfoProps> = ({ eigenspaces }) => {
 				return "Line (1D eigenspace)";
 			case 2:
 				return "Plane (2D eigenspace)";
-			//   case 3: return '(3D eigenspace)';
 			default:
 				return `${dimension}D eigenspace`;
 		}
