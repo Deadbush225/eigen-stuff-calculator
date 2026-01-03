@@ -1,6 +1,3 @@
-import React from "react";
-import MathDisplay from "../components/util/MathDisplay";
-
 import { type Complex } from "mathjs";
 import {
 	formatMatrix,
@@ -17,13 +14,7 @@ import {
 	calculateTriangularDeterminant,
 	assembleNbyNDeterminantExpression,
 } from "./determinantFinder";
-import {
-	formatMatrixLatex,
-	formatExpressionLatex,
-	formatEigenvaluesLatex,
-	cleanExpressionLatex,
-	splitLatexByOperators,
-} from "./latexFormatter";
+import { cleanExpressionLatex } from "./latexFormatter";
 import { expandPolynomialManual } from "./expressionDeflater";
 
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
@@ -340,18 +331,14 @@ function findEigenvectorBasis(
 	xIMinusA: (string | number)[][],
 	eigenvalue: number | Complex
 ): Eigenspace {
-	// console.log("TEST");
 	const xIMinusACopy = JSON.parse(JSON.stringify(xIMinusA)) as (
 		| string
 		| number
 	)[][];
 	console.log("xI - A matrix:", formatMatrix(xIMinusACopy));
-	// console.log("dimensions:", xIMinusA.length, xIMinusA[0].length);
 
 	for (let i = 0; i < xIMinusACopy.length; i++) {
 		for (let j = 0; j < xIMinusACopy[i].length; j++) {
-			// console.log("Element:", xIMinusA[i][j]);
-			// console.log("Type:", typeof xIMinusA[i][j]);
 			if (typeof xIMinusACopy[i][j] === "string") {
 				// Replace 'x' with eigenvalue
 				const x = math.evaluate(
@@ -361,8 +348,6 @@ function findEigenvectorBasis(
 					)
 				);
 
-				// console.log("X:", x);
-				// console.log("EIGENVALUE: ", eigenvalue.toString());
 				xIMinusACopy[i][j] = x;
 			}
 		}
@@ -418,8 +403,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 	// Step 1: Create xI - A matrix
 	const xIMinusA = createXIMinusAMatrix(inputMatrix);
 	console.log("xI - A matrix:", xIMinusA);
-	const xIMinusAString = formatXIMinusAMatrix(xIMinusA);
-	console.log("xI - A matrix (formatted):", xIMinusAString);
+	console.log("xI - A matrix (formatted):", formatXIMinusAMatrix(xIMinusA));
 
 	// Step 2: Calculate determinant expression
 	const determinantExpression = calculateDeterminantExpression(xIMinusA);
@@ -445,6 +429,14 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 	console.warn("Eigenvalues (mathjs):", mathjsResult.values);
 	console.warn("Eigenvalues (manual):", polynomialResult);
 
+	// Step 4: Calculate eigenspaces for each eigenvalue
+	const eigenspaces: Eigenspace[] = [];
+	for (const val of polynomialResult.eigenvalues) {
+		console.log("Finding eigenvector basis for eigenvalue:", val);
+		const eigenspace = findEigenvectorBasis(xIMinusA, val);
+		eigenspaces.push(eigenspace);
+	}
+
 	// Additional calculations
 	const trace = calculateTraceManual(inputMatrix);
 	const isReal =
@@ -452,14 +444,6 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 			(val: number | Complex) =>
 				typeof val === "number" && isFinite(val) && !isNaN(val)
 		) && polynomialResult.eigenvalues.length != 0;
-
-	// Calculate eigenspaces for each eigenvalue
-	const eigenspaces: Eigenspace[] = [];
-	for (const val of polynomialResult.eigenvalues) {
-		console.log("---Finding eigenvector basis for eigenvalue:---", val);
-		const eigenspace = findEigenvectorBasis(xIMinusA, val);
-		eigenspaces.push(eigenspace);
-	}
 
 	return {
 		eigenvalues: polynomialResult.eigenvalues,
@@ -469,6 +453,5 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 		determinantExpression,
 		trace,
 		isReal,
-		// steps,
 	};
 }

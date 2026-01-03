@@ -9,11 +9,11 @@ interface EigenspaceInfoProps {
 
 const EigenspaceInfo: React.FC<EigenspaceInfoProps> = ({ eigenspaces }) => {
 	const formatVector = (vec: number[]) =>
-		`[${vec.map((n) => n.toFixed(2)).join(", ")}]`;
+		`[${vec.map((n) => n.toFixed(5)).join(", ")}]`;
 
 	const formatEigenvalue = (eigenvalue: number | Complex) => {
 		if (typeof eigenvalue === "number") {
-			return eigenvalue.toFixed(3);
+			return eigenvalue.toFixed(5);
 		} else {
 			// Handle Complex numbers
 			const complex = eigenvalue as Complex;
