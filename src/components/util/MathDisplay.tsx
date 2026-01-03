@@ -5,11 +5,15 @@ import katex from "katex";
 interface MathProps {
 	latex: string;
 	block?: boolean; // true for centered $$...$$, false for inline
+	color?: string;
 }
 
-const MathDisplay: React.FC<MathProps> = ({ latex, block = false }) => {
+const MathDisplay: React.FC<MathProps> = ({ latex, block = false, color }) => {
 	// 1. Generate HTML string using KaTeX logic
 	// "throwOnError: false" renders the raw string instead of crashing if latex is invalid
+  if (color) {
+    latex = `\\color{${color}}{${latex}}`;
+  }
 	const html = katex.renderToString(latex, {
 		throwOnError: false,
 		displayMode: block,

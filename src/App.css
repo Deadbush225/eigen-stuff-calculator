@@ -60,6 +60,11 @@ h6 {
   color: white;
 }
 
+
+h4, h4 *{
+  color: #007acc !important;
+}
+
 .visualization-container {
   padding: 1em;
   margin: 0 auto;
@@ -114,6 +119,7 @@ h6 {
 .katex * {
   color: white;
 }
+
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Card ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .card:hover {

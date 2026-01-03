@@ -1,7 +1,14 @@
 import React, { memo, useMemo, useEffect } from "react";
-import { displayStepByStep, findEigenvalues } from "../lib/eigenStuffFinder";
+import { findEigenvalues } from "../lib/eigenStuffFinder";
 import { type Eigenspace } from "../lib/eigen-types";
 import "./EigenvalueSolution.scss";
+import MathDisplay from "./util/MathDisplay";
+import {
+	formatMatrixLatex,
+	formatExpressionLatex,
+	formatEigenvaluesLatex,
+	splitLatexByOperators,
+} from "../lib/latexFormatter";
 
 interface EigenvalueSolutionProps {
 	matrix: number[][];
@@ -14,6 +21,7 @@ const EigenvalueSolution: React.FC<EigenvalueSolutionProps> = memo(
 		const { solution, eigenspaces } = useMemo(() => {
 			try {
 				const result = findEigenvalues(matrix);
+
 				return {
 					solution: displayStepByStep(matrix),
 					eigenspaces: result.eigenspaces,
@@ -60,3 +68,49 @@ const EigenvalueSolution: React.FC<EigenvalueSolutionProps> = memo(
 EigenvalueSolution.displayName = "EigenvalueSolution";
 
 export default EigenvalueSolution;
+
+/* ━━━━━━━━━━━━━━━━ Helper for Display Layout ━━━━━━━━━━━━━━━ */
+/**
+ * Helper function to display step-by-step solution
+ */
+function displayStepByStep(inputMatrix: number[][]): React.JSX.Element {
+	const result = findEigenvalues(inputMatrix);
+
+	return (
+		<div className="eigenvalue-solution card">
+			<div>
+				<h4>Step 1: Create <MathDisplay latex="xI - A"></MathDisplay> matrix</h4>
+				<MathDisplay latex={formatMatrixLatex(result.xIMinusA)} block />
+			</div>
+			<div className="dynamix-latex">
+				<h4>
+					Step 2: Calculate <MathDisplay latex="\det(xI - A)"></MathDisplay>
+				</h4>
+				<MathDisplay
+					latex={`\\det(xI - A) = ${splitLatexByOperators(
+						formatExpressionLatex(result.determinantExpression)
+					)}`}
+					block
+				/>
+			</div>
+			<div className="dynamix-latex">
+				<h4>Step 3: Characteristic Polynomial</h4>
+				<MathDisplay
+					latex={formatExpressionLatex(result.characteristicPolynomial)}
+					block
+				/>
+			</div>
+			<div className="dynamix-latex">
+				<h4>Step 4: Eigenvalues <MathDisplay latex="σ(A)"></MathDisplay></h4>
+				<MathDisplay latex={formatEigenvaluesLatex(result.eigenvalues)} block />
+			</div>
+			<div className="summary">
+				<h4>Summary</h4>
+				<MathDisplay
+					latex={`\\text{All eigenvalues are real: } ${result.isReal}\\newline\\text{Trace: } \\operatorname{tr}(A) = ${result.trace}`}
+					block
+				/>
+			</div>
+		</div>
+	);
+}

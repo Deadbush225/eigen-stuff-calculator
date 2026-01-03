@@ -1,4 +1,4 @@
-import { re, type Complex } from "mathjs";
+import { type Complex } from "mathjs";
 
 // Helper functions to format mathematical content for LaTeX display
 
