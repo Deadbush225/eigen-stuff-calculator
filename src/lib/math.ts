@@ -8,3 +8,8 @@ export type characteristicPolynomial = {
 	variables: string[];
 	coefficients: MathType[];
 };
+
+export type Eigenvalue = {
+	value: number;
+	multiplicity: number;
+};

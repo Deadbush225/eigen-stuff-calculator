@@ -1,4 +1,4 @@
-import { math } from "../math";
+import { math, type Eigenvalue } from "../math";
 import { calculateDeterminant } from "../matrixOperations";
 
 type PolynomialCoefficients = number[];
@@ -9,8 +9,8 @@ type PolynomialCoefficients = number[];
  */
 export function validateEigenvalues(
 	matrix: number[][],
-	eigenvalues: number[]
-): number[] {
+	eigenvalues: Eigenvalue[]
+): Eigenvalue[] {
 	const EPSILON = 1e-6;
 	if (eigenvalues === undefined || eigenvalues.length === 0) {
 		console.warn("Eigenvalues are empty or undefined");
@@ -19,19 +19,21 @@ export function validateEigenvalues(
 
 	// 1. Snap values to nearby integers or zero
 	const snapped = eigenvalues.map((ev) => {
-		const rounded = Math.round(ev);
+		const rounded = Math.round(ev.value);
 		// If it's effectively an integer, return the integer
-		if (Math.abs(ev - rounded) < 1e-2) return rounded;
+		if (Math.abs(ev.value - rounded) < 1e-2)
+			return { value: rounded, multiplicity: ev.multiplicity };
 		// If it's effectively zero (but round might not catch it if it's 0.000001)
-		if (Math.abs(ev) < EPSILON) return 0;
+		if (Math.abs(ev.value) < EPSILON)
+			return { value: 0, multiplicity: ev.multiplicity };
 		return ev;
 	});
 
 	// 2. Remove duplicates using the same threshold
 	// We use reduce to build an array of unique values
-	const dedupped = snapped.reduce<number[]>((acc, current) => {
+	const dedupped = snapped.reduce<Eigenvalue[]>((acc, current) => {
 		const isDuplicate = acc.some(
-			(uniqueVal) => Math.abs(uniqueVal - current) < EPSILON
+			(uniqueVal) => Math.abs(uniqueVal.value - current.value) < EPSILON
 		);
 
 		if (!isDuplicate) {
@@ -42,7 +44,7 @@ export function validateEigenvalues(
 
 	// 3. Validate each eigenvalue by checking det(A - λI) ≈ 0
 	return dedupped.filter((ev) => {
-		const detValue = calculateCharacteristicValue(matrix, ev);
+		const detValue = calculateCharacteristicValue(matrix, ev.value);
 		const p = Math.abs(detValue) < EPSILON;
 		console.log(
 			`Eigenvalue ${ev} validation: det(A - ${ev}I) ≈ 0 is ${p}, because det = ${detValue}`
@@ -76,6 +78,20 @@ function calculateCharacteristicValue(
 	return calculateDeterminant(AMinusLambdaI);
 }
 
+// coefficiets are arranged [an, an-1, ..., a0]
+function rootsToEigenvalues(
+	roots: number[],
+	coefficients: number[]
+): Eigenvalue[] {
+	const withMultiplicity = roots.map((r) => ({
+		value: r,
+		multiplicity: getMultiplicity(coefficients, r),
+	}));
+
+	console.log("Eigenvalues with multiplicity:", withMultiplicity);
+	return withMultiplicity;
+}
+
 /**
  * Solves for real roots of a polynomial given its coefficients.
  * Uses Newton-Raphson method with Synthetic Division deflation.
@@ -86,7 +102,7 @@ export function solveRealRoots(
 	matrix: number[][],
 	inputCoeffs: PolynomialCoefficients,
 	poly: string
-): number[] {
+): Eigenvalue[] {
 	const coeffs = [...inputCoeffs];
 
 	// Clean coefficients (remove leading zeros)
@@ -101,7 +117,7 @@ export function solveRealRoots(
 	if (coeffs.length === 2) {
 		// Linear: ax + b = 0 → x = -b/a
 		const root = coeffs[1] === 0 ? 0 : -coeffs[1] / coeffs[0];
-		return isFinite(root) ? [root] : [];
+		return isFinite(root) ? [{ value: root, multiplicity: 1 }] : [];
 	}
 
 	if (coeffs.length === 3) {
@@ -119,20 +135,24 @@ export function solveRealRoots(
 			if (isFinite(root2) && Math.abs(root1 - root2) > 1e-14) {
 				roots.push(root2);
 			}
-			return roots.sort((a, b) => a - b);
+			return roots
+				.sort((a, b) => a - b)
+				.map((r) => ({ value: r, multiplicity: getMultiplicity(coeffs, r) }));
 		}
 		return []; // Complex roots only
 	}
 
 	if (coeffs.length === 4) {
 		// Cubic: use exact formula
-		return validateEigenvalues(matrix, solveCubicOptimized(coeffs));
+		const roots = solveCubicOptimized(coeffs);
+		return validateEigenvalues(matrix, rootsToEigenvalues(roots, coeffs));
 	}
 
 	// For higher degree polynomials, use optimized Newton-Raphson
-	const eigenvalues: number[] = validateEigenvalues(
+	const roots = optimizedNewtonRaphson(poly, coeffs);
+	const eigenvalues: Eigenvalue[] = validateEigenvalues(
 		matrix,
-		optimizedNewtonRaphson(poly, coeffs)
+		rootsToEigenvalues(roots, coeffs)
 	);
 
 	return eigenvalues;
@@ -497,4 +517,58 @@ function solveCubicOptimized(coeffs: number[]): number[] {
 	}
 
 	return roots.sort((a, b) => a - b);
+}
+
+/**
+ * NEW: Helper to calculate algebraic multiplicity
+ * Repeatedly divides the polynomial by (x - root) until remainder is non-zero
+ */
+function getMultiplicity(originalCoeffs: number[], root: number): number {
+	let count = 0;
+	let currentCoeffs = [...originalCoeffs];
+
+	// Standardize: remove leading zeros
+	while (currentCoeffs.length > 0 && currentCoeffs[0] === 0)
+		currentCoeffs.shift();
+
+	while (true) {
+		const { quotient, remainder } = syntheticDivision(currentCoeffs, root);
+
+		// Check if remainder is effectively zero (allowing for floating point drift)
+		// We use a slightly looser epsilon for higher-order deflations
+		if (Math.abs(remainder) < 1e-5) {
+			count++;
+			currentCoeffs = quotient;
+			if (currentCoeffs.length < 2) break; // Constant or empty
+		} else {
+			break;
+		}
+	}
+
+	return count > 0 ? count : 1; // Default to 1 if numerical error occurred
+}
+
+/**
+ * NEW: Performs standard synthetic division returning the remainder
+ * Returns P(x) / (x - c)
+ */
+function syntheticDivision(coeffs: number[], c: number) {
+	const quotient: number[] = [];
+
+	if (coeffs.length === 0) return { quotient: [], remainder: 0 };
+
+	let current = coeffs[0];
+	quotient.push(current);
+
+	// Loop through to second-to-last coefficient
+	for (let i = 1; i < coeffs.length - 1; i++) {
+		current = coeffs[i] + current * c;
+		quotient.push(current);
+	}
+
+	// Calculate final remainder
+	const lastCoeff = coeffs[coeffs.length - 1];
+	const remainder = lastCoeff + current * c;
+
+	return { quotient, remainder };
 }

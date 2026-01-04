@@ -1,5 +1,7 @@
 import { multiplyMatrices } from "../matrixOperations";
 import { dotProduct } from "../matrixOperations";
+import { type Eigenvalue } from "../math";
+
 /**
  * QR Algorithm for eigenvalue computation
  */
@@ -99,11 +101,20 @@ function qrDecomposition(A: number[][]): { Q: number[][]; R: number[][] } {
 	return { Q, R };
 }
 
+function countOccurrences(arr: number[], val: number): number {
+	return arr.reduce(
+		(count, current) => (Math.abs(current - val) < 1e-10 ? count + 1 : count),
+		0
+	);
+}
+
 /**
  * Find eigenvalues using diagonalization method
  * Uses QR algorithm or power iteration for numerical eigenvalue computation
  */
-export function findEigenvaluesByDiagonalization(matrix: number[][]): number[] {
+export function findEigenvaluesByDiagonalization(
+	matrix: number[][]
+): Eigenvalue[] {
 	console.log("=== DIAGONALIZATION METHOD ===");
 	console.log("Input matrix:", matrix);
 
@@ -112,7 +123,10 @@ export function findEigenvaluesByDiagonalization(matrix: number[][]): number[] {
 		const qrEigenvalues = qrAlgorithm(matrix);
 		if (qrEigenvalues.length > 0) {
 			console.log("QR Algorithm found eigenvalues:", qrEigenvalues);
-			return qrEigenvalues;
+			return qrEigenvalues.map((value) => ({
+				value,
+				multiplicity: countOccurrences(qrEigenvalues, value),
+			}));
 		}
 	} catch (error) {
 		console.warn("QR Algorithm failed:", error);

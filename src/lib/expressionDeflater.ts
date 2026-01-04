@@ -55,7 +55,7 @@ function tokenize(input: string): Token[] {
 		// 1. Numbers (integers or decimals)
 		if (/\d/.test(char)) {
 			let numStr = char;
-			while (i + 1 < str.length && /[\d\.]/.test(str[i + 1])) {
+			while (i + 1 < str.length && /[\d.]/.test(str[i + 1])) {
 				numStr += str[++i];
 			}
 			tokens.push({ type: "NUM", value: numStr });

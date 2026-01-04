@@ -19,24 +19,32 @@ const EigenvalueSolution: React.FC<EigenvalueSolutionProps> = memo(
 	({ matrix, onEigenspacesCalculated }) => {
 		// Memoize the solution calculation to avoid recalculating on every render
 		const { solution, eigenspaces } = useMemo(() => {
-			try {
+			if (!matrix || matrix.length === 0) {
+				// You can return null, or a placeholder message.
+				return {
+					solution: null,
+					eigenspaces: [],
+				};
+			}
+
+			// try {
 				const result = findEigenvalues(matrix);
 
 				return {
 					solution: displayStepByStep(matrix),
 					eigenspaces: result.eigenspaces,
 				};
-			} catch (error) {
-				return {
-					solution: (
-						<div className="error">
-							Error calculating eigenvalues: {(error as Error).message} 
-              {(error as Error).stack}
-						</div>
-					),
-					eigenspaces: [],
-				};
-			}
+			// } catch (error) {
+			// 	return {
+			// 		solution: (
+			// 			<div className="error">
+			// 				Error calculating eigenvalues: {(error as Error).message}
+			// 				{(error as Error).stack}
+			// 			</div>
+			// 		),
+			// 		eigenspaces: [],
+			// 	};
+			// }
 		}, [matrix]);
 
 		// Notify parent component about eigenspaces when they change
@@ -66,7 +74,7 @@ const EigenvalueSolution: React.FC<EigenvalueSolutionProps> = memo(
 );
 
 // Add display name for debugging
-EigenvalueSolution.displayName = "EigenvalueSolution";
+// EigenvalueSolution.displayName = "EigenvalueSolution";
 
 export default EigenvalueSolution;
 
@@ -80,7 +88,9 @@ function displayStepByStep(inputMatrix: number[][]): React.JSX.Element {
 	return (
 		<div className="eigenvalue-solution card">
 			<div>
-				<h4>Step 1: Create <MathDisplay latex="xI - A"></MathDisplay> matrix</h4>
+				<h4>
+					Step 1: Create <MathDisplay latex="xI - A"></MathDisplay> matrix
+				</h4>
 				<MathDisplay latex={formatMatrixLatex(result.xIMinusA)} block />
 			</div>
 			<div className="dynamix-latex">
@@ -102,7 +112,9 @@ function displayStepByStep(inputMatrix: number[][]): React.JSX.Element {
 				/>
 			</div>
 			<div className="dynamix-latex">
-				<h4>Step 4: Eigenvalues <MathDisplay latex="σ(A)"></MathDisplay></h4>
+				<h4>
+					Step 4: Eigenvalues <MathDisplay latex="σ(A)"></MathDisplay>
+				</h4>
 				<MathDisplay latex={formatEigenvaluesLatex(result.eigenvalues)} block />
 			</div>
 			<div className="summary">

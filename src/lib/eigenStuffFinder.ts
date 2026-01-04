@@ -6,7 +6,12 @@ import {
 } from "./matrixOperations";
 import { solveRealRoots, validateEigenvalues } from "./solver/usingRealRoots";
 import { findEigenvaluesByDiagonalization } from "./solver/usingDiagonalization";
-import { math, type characteristicPolynomial } from "./math";
+import {
+	math,
+	type characteristicPolynomial,
+	type Eigenvalue,
+	type LatexString,
+} from "./math";
 import {
 	calculateTriangularDeterminant,
 	assembleNbyNDeterminantExpression,
@@ -15,7 +20,6 @@ import { cleanExpressionLatex, formatXIMinusAMatrix } from "./latexFormatter";
 import { expandPolynomialManual } from "./expressionDeflater";
 import { type Eigenspace } from "./eigen-types";
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
-import { type LatexString } from "./math";
 
 /**
  * Manual Eigenvalue Calculator
@@ -23,7 +27,7 @@ import { type LatexString } from "./math";
  * Pure TypeScript implementation without external library dependencies for core calculations
  */
 export interface EigenResult {
-	eigenvalues: (number | Complex)[];
+	eigenvalues: Eigenvalue[];
 	eigenspaces: Eigenspace[];
 	characteristicPolynomial: string;
 	xIMinusA: (string | number)[][];
@@ -85,7 +89,7 @@ function calculateDeterminantExpression(
 function solveCharacteristicPolynomial(
 	determinantExpr: characteristicPolynomial,
 	inputMatrix: number[][]
-): { polynomial: string; eigenvalues: (number | Complex)[] } {
+): { polynomial: string; eigenvalues: Eigenvalue[] } {
 	const coeff = determinantExpr.coefficients as number[];
 	const n = inputMatrix.length;
 	if (n < 1 || n > 5) {
@@ -95,7 +99,7 @@ function solveCharacteristicPolynomial(
 	}
 
 	// use numerical approach for n = 1 to 3
-	let roots: number[] = [];
+	let roots: Eigenvalue[] = [];
 	if (n <= 3) {
 		console.log("USING MATHJS POLY ROOT");
 		console.log(coeff.reverse());
@@ -104,6 +108,7 @@ function solveCharacteristicPolynomial(
 			coeff.reverse() as number[],
 			determinantExpr.expression.toString()
 		);
+		console.log("Roots found:", roots);
 	} else if (roots.length === 0) {
 		console.log(
 			"🟨 Newton-Raphson method will take too long, using diagonalization method"
@@ -127,17 +132,17 @@ function solveCharacteristicPolynomial(
 		}
 
 		// Final fallback: use math.js library for eigs()
-		if (roots.length === 0) {
-			console.log("🟨 Using math.js eigs() as final fallback...");
-			try {
-				const mathjsRoots = math.eigs(inputMatrix).values;
-				roots = mathjsRoots as number[];
-				console.log("🟩 math.js eigs() successful:", roots);
-			} catch (error) {
-				console.error("🟥 Even math.js eigs() failed:", error);
-				roots = [];
-			}
-		}
+		// if (roots.length === 0) {
+		// 	console.log("🟨 Using math.js eigs() as final fallback...");
+		// 	try {
+		// 		const mathjsRoots = math.eigs(inputMatrix).values;
+		// 		roots = mathjsRoots as number[];
+		// 		console.log("🟩 math.js eigs() successful:", roots);
+		// 	} catch (error) {
+		// 		console.error("🟥 Even math.js eigs() failed:", error);
+		// 		roots = [];
+		// 	}
+		// }
 	}
 
 	return {
@@ -205,6 +210,8 @@ function findEigenvectorBasis(
  * Main function to find eigenvalues following the manual mathematical approach
  */
 export function findEigenvalues(inputMatrix: number[][]): EigenResult {
+	console.log("[eigenStuffFinder] Input Matrix:", inputMatrix);
+
 	// Validate input
 	if (!inputMatrix || inputMatrix.length === 0) {
 		throw new Error("Matrix cannot be empty");
@@ -252,7 +259,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 	const calculatedEigenvalues = polynomialResult.eigenvalues;
 	const validatedEigenvalues = validateEigenvalues(
 		inputMatrix,
-		calculatedEigenvalues as number[]
+		calculatedEigenvalues
 	);
 	console.log("Validated Eigenvalues:", validatedEigenvalues);
 
@@ -261,7 +268,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 	if (validatedEigenvalues.length !== 0) {
 		for (const val of validatedEigenvalues) {
 			// console.log("Finding eigenvector basis for eigenvalue:", val);
-			const eigenspace = findEigenvectorBasis(xIMinusA, val);
+			const eigenspace = findEigenvectorBasis(xIMinusA, val.value);
 			eigenspaces.push(eigenspace);
 		}
 	}

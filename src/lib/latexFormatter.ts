@@ -1,4 +1,4 @@
-import { type Complex } from "mathjs";
+import type { Eigenvalue } from "./math";
 
 // Helper functions to format mathematical content for LaTeX display
 
@@ -59,24 +59,14 @@ function cleanExpressionLatex(expression: string): string {
 /**
  * Format eigenvalues for LaTeX display
  */
-function formatEigenvaluesLatex(eigenvalues: (number | Complex)[]): string {
+function formatEigenvaluesLatex(eigenvalues: Eigenvalue[]): string {
 	const formattedValues = eigenvalues.map((val) => {
-		if (typeof val === "number") {
-			return val.toFixed(4);
-		} else {
-			// Handle Complex numbers
-			const complex = val as Complex;
-			if (complex.im === 0) {
-				return complex.re.toFixed(4);
-			} else if (complex.re === 0) {
-				return `${complex.im.toFixed(4)}i`;
-			} else {
-				const sign = complex.im >= 0 ? "+" : "-";
-				return `${complex.re.toFixed(4)} ${sign} ${Math.abs(complex.im).toFixed(
-					4
-				)}i`;
-			}
+		// if (typeof val === Eigenva) {
+		let string = val.value.toFixed(4);
+		if (val.multiplicity != 1 && val.multiplicity != undefined) {
+			string += `\\ (\\text{with multiplicity } ${val.multiplicity})`;
 		}
+		return string;
 	});
 
 	return `\\sigma(A) = \\{${formattedValues.join(", ")}\\}`;
