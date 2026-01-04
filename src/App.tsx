@@ -100,7 +100,7 @@ function App() {
     const hasSeenTour = localStorage.getItem(TOUR_KEY) === "true";
 
     let timer: number | undefined;
-    if (!hasSeenTour) {
+    if (!hasSeenTour && !showTour) {
       timer = window.setTimeout(() => {
       setShowTour(true);
       localStorage.setItem(TOUR_KEY, "true");
