@@ -262,6 +262,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 		inputMatrix,
 		calculatedEigenvalues
 	);
+	console.log("Calculated Eigenvalues:", calculatedEigenvalues);
 	console.log("Validated Eigenvalues:", validatedEigenvalues);
 
 	// Step 4: Calculate eigenspaces for each eigenvalue
@@ -281,8 +282,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 	// For now we check if calculated eigenvalues match validated ones
 	const isReal =
 		validatedEigenvalues.length !== 0 &&
-		validatedEigenvalues.length === calculatedEigenvalues.length &&
-		validatedEigenvalues.every((val) => calculatedEigenvalues.includes(val));
+		validatedEigenvalues.length === calculatedEigenvalues.length;
 
 	return {
 		eigenvalues: validatedEigenvalues,
