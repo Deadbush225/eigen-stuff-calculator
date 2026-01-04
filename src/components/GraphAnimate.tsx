@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { type Complex } from "mathjs";
+import { and, type Complex } from "mathjs";
 
 import { type Eigenspace } from "../lib/eigen-types";
 
@@ -25,6 +25,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 
 		// Store reference to container for cleanup
 		const container = containerRef.current;
+    // Detect if Android device
+    const isAndroid = /Android/i.test(navigator.userAgent);
 
 		// Determine matrix dimensions and create appropriate transformation
 		const matrixSize = transformationMatrix.length;
@@ -111,7 +113,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			);
 			const line = new THREE.Line(geometry, lineMaterial(color, linewidth));
 			line.material.transparent = true;
-			line.material.opacity = 0.5;
+			line.material.opacity = isAndroid ? 0.2 : 0.4;
 			return line;
 		};
 
@@ -154,7 +156,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 
 			// Add white stroke for better visibility
 			context.strokeStyle = "#ffffff";
-			context.lineWidth = 4;
+			context.lineWidth = 7;
 			context.strokeText(text, canvas.width / 2, canvas.height / 2);
 
 			// Fill the text
@@ -290,6 +292,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 		const basisLineWidth = isAndroidNonFirefox ? 8 : 6;
 		const pointSize = isAndroidNonFirefox ? 12 : 8;
 
+    const textOffset = 0.3;
+
 		// e1 = [1, 0, 0] - unit vector along X (red)
 		scene.add(
 			createLine(
@@ -302,7 +306,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			)
 		);
 		scene.add(createPoints([[1, 0, 0]], 0xcc0000, pointSize));
-		scene.add(createTextLabel("e₁", new THREE.Vector3(1.1, 0.1, 0), 0xcc0000));
+		scene.add(createTextLabel("e₁", new THREE.Vector3(1.1, 0.1, 0 - textOffset), 0xcc0000));
 
 		// e2 = [0, 1, 0] - unit vector along Y (green)
 		scene.add(
@@ -316,7 +320,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			)
 		);
 		scene.add(createPoints([[0, 1, 0]], 0x00cc00, pointSize));
-		scene.add(createTextLabel("e₂", new THREE.Vector3(0.1, 1.1, 0), 0x00cc00));
+		scene.add(createTextLabel("e₂", new THREE.Vector3(0.1, 1.1, 0 - textOffset), 0x00cc00));
 
 		// e3 = [0, 0, 1] - unit vector along Z (blue) - only for 3D
 		if (!is2D) {
@@ -332,7 +336,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			);
 			scene.add(createPoints([[0, 0, 1]], 0x0000cc, pointSize));
 			scene.add(
-				createTextLabel("e₃", new THREE.Vector3(0.1, 0, 1.1), 0x0000cc)
+				createTextLabel("e₃", new THREE.Vector3(0.1, 0, 1.1 - textOffset), 0x0000cc)
 			);
 		}
 
@@ -386,7 +390,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 				new THREE.Vector3(
 					e1_transformed[0] + 0.1,
 					e1_transformed[1] + 0.1,
-					e1_transformed[2] + 0.1
+					e1_transformed[2] + textOffset
 				),
 				0xff4444
 			)
@@ -394,18 +398,18 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 
 		// Transformed e2 (green)
 		scene.add(
-			createLine([[0, 0, 0], e2_transformed], 0x44ff44, transformedLineWidth)
+			createLine([[0, 0, 0], e2_transformed], 0x44AB44, transformedLineWidth)
 		);
-		scene.add(createPoints([e2_transformed], 0x44ff44, transformedPointSize));
+		scene.add(createPoints([e2_transformed], 0x44AB44, transformedPointSize));
 		scene.add(
 			createTextLabel(
 				"Ae₂",
 				new THREE.Vector3(
 					e2_transformed[0] + 0.1,
 					e2_transformed[1] + 0.1,
-					e2_transformed[2] + 0.1
+					e2_transformed[2] + textOffset
 				),
-				0x44ff44
+				0x44AB44
 			)
 		);
 
@@ -421,7 +425,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 					new THREE.Vector3(
 						e3_transformed[0] + 0.1,
 						e3_transformed[1] + 0.1,
-						e3_transformed[2] + 0.1
+						e3_transformed[2] + textOffset
 					),
 					0x4444ff
 				)
