@@ -99,7 +99,7 @@ function App() {
 
 					<div className="visualization-container">
 						<EigenspaceInfo eigenspaces={basisVectors} />
-						{[2, 3].includes(matrix.length) && (
+						{[2, 3].includes(matrix.length) && basisVectors.length > 0 && (
 							<div id="visualization-section" className="visualization-section">
 								<h2>
 									{textLabel[matrix.length].dimension} Matrix Transformation

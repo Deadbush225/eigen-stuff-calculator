@@ -12,7 +12,8 @@ export function validateEigenvalues(
 	eigenvalues: number[]
 ): number[] {
 	const EPSILON = 1e-6;
-	if (eigenvalues === undefined) {
+	if (eigenvalues === undefined || eigenvalues.length === 0) {
+		console.warn("Eigenvalues are empty or undefined");
 		return [];
 	}
 

@@ -52,13 +52,15 @@ const EigenspaceInfo: React.FC<EigenspaceInfoProps> = ({ eigenspaces }) => {
 		return colors[index % colors.length];
 	};
 
-	if (eigenspaces.length === 0) {
-		return null;
-	}
+
 
 	return (
 		<div id="eigenspaces-info" className="eigenspace-info">
 			<h3>Eigenspaces Analysis</h3>
+
+      {eigenspaces.length === 0 ? (
+		<div>No eigenspaces found.</div>
+	) : (
 			<div className="eigenspace-list">
 				{eigenspaces.map((eigenspace, index) => {
 					const dimension = getEigenspaceDimension(eigenspace);
@@ -96,7 +98,7 @@ const EigenspaceInfo: React.FC<EigenspaceInfoProps> = ({ eigenspaces }) => {
 						</div>
 					);
 				})}
-			</div>
+			</div>)}
 		</div>
 	);
 };

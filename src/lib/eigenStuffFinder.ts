@@ -248,25 +248,31 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 	console.warn("Eigenvalues (mathjs):", mathjsResult.values);
 	console.warn("Eigenvalues (manual):", polynomialResult);
 
+	console.log("Validating Eigenvalues...");
 	const calculatedEigenvalues = polynomialResult.eigenvalues;
 	const validatedEigenvalues = validateEigenvalues(
 		inputMatrix,
 		calculatedEigenvalues as number[]
 	);
+	console.log("Validated Eigenvalues:", validatedEigenvalues);
 
 	// Step 4: Calculate eigenspaces for each eigenvalue
 	const eigenspaces: Eigenspace[] = [];
-	for (const val of validatedEigenvalues) {
-		// console.log("Finding eigenvector basis for eigenvalue:", val);
-		const eigenspace = findEigenvectorBasis(xIMinusA, val);
-		eigenspaces.push(eigenspace);
+	if (validatedEigenvalues.length !== 0) {
+		for (const val of validatedEigenvalues) {
+			// console.log("Finding eigenvector basis for eigenvalue:", val);
+			const eigenspace = findEigenvectorBasis(xIMinusA, val);
+			eigenspaces.push(eigenspace);
+		}
 	}
+	console.log("[eigenStuffFinder] Eigenspaces:", eigenspaces);
 
 	// Additional calculations
 	const trace = calculateTraceManual(inputMatrix);
 
 	// For now we check if calculated eigenvalues match validated ones
 	const isReal =
+		validatedEigenvalues.length !== 0 &&
 		validatedEigenvalues.length === calculatedEigenvalues.length &&
 		validatedEigenvalues.every((val) => calculatedEigenvalues.includes(val));
 

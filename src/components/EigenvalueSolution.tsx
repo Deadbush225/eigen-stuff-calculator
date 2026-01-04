@@ -41,7 +41,7 @@ const EigenvalueSolution: React.FC<EigenvalueSolutionProps> = memo(
 
 		// Notify parent component about eigenspaces when they change
 		useEffect(() => {
-			if (onEigenspacesCalculated && eigenspaces.length > 0) {
+			if (onEigenspacesCalculated /* && eigenspaces.length > 0 */) {
 				onEigenspacesCalculated(eigenspaces);
 			}
 		}, [eigenspaces, onEigenspacesCalculated]);
