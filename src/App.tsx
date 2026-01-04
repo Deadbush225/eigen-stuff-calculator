@@ -18,6 +18,10 @@ function App() {
 	);
 	const [showTour, setShowTour] = useState<boolean>(false);
 
+	// Tour button visibility/opacity state controlled by scroll
+	const [tourButtonOpacity, setTourButtonOpacity] = useState<number>(1);
+
+
 	const handleMatrixChange = (newMatrix: number[][]) => {
 		setMatrix(newMatrix);
 		console.log("Matrix updated:", newMatrix);
@@ -43,6 +47,38 @@ function App() {
 	const handleTourComplete = () => {
 		setShowTour(false);
 	};
+
+	// Fade the tour button out smoothly across a larger range: start at 100px and
+	// finish at 600px (500px distance). Use rAF for smooth updates.
+	useEffect(() => {
+		let ticking = false;
+
+		const onScroll = () => {
+			if (!ticking) {
+				window.requestAnimationFrame(() => {
+					const y = window.scrollY || window.pageYOffset || 0;
+					// Map y in [start, end] to opacity in [1, 0]
+					const start = 100;
+					const end = 1500; // start + 500px
+					let opacity = 1;
+					if (y <= start) {
+						opacity = 1;
+					} else if (y >= end) {
+						opacity = 0;
+					}
+					setTourButtonOpacity(Number(opacity.toFixed(3)));
+					ticking = false;
+				});
+				ticking = true;
+			}
+		};
+
+		window.addEventListener("scroll", onScroll, { passive: true });
+		// initialize
+		onScroll();
+
+		return () => window.removeEventListener("scroll", onScroll);
+	}, []);
 
 	const textLabel: {
 		[key: number]: { [key: string]: string };
@@ -88,7 +124,15 @@ function App() {
 
 			{/* Tour Button */}
 			{activeSection === "calculator" && (
-				<button className="tour-button" onClick={startTour}>
+				<button
+					className="tour-button"
+					onClick={startTour}
+					style={{
+						opacity: tourButtonOpacity,
+						transition: "opacity 250ms ease-in-out",
+						pointerEvents: tourButtonOpacity === 0 ? "none" : "auto",
+					}}
+				>
 					🎯 Take a Tour
 				</button>
 			)}
