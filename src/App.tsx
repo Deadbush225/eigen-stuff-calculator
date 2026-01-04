@@ -60,9 +60,22 @@ function App() {
 	};
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const TOUR_KEY = "eigen_tour_shown";
+    const hasSeenTour = localStorage.getItem(TOUR_KEY) === "true";
+
+    let timer: number | undefined;
+    if (!hasSeenTour) {
+      timer = window.setTimeout(() => {
       setShowTour(true);
-    }, 1000);
+      localStorage.setItem(TOUR_KEY, "true");
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) {
+      clearTimeout(timer);
+      }
+    };
     return () => clearTimeout(timer);
   }, []);
 
