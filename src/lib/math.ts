@@ -1,5 +1,4 @@
 import { create, all, type MathNode, type MathType } from "mathjs";
-import type { Complex } from "mathjs";
 
 export const math = create(all);
 
@@ -21,6 +20,6 @@ export type Matrix = number[][];
 export type BasisVector = number[][];
 
 export type Eigenspace = {
-	eigenvalue: number | Complex;
+	eigenvalue: Eigenvalue;
 	basis: BasisVector;
 };

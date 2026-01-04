@@ -1,7 +1,6 @@
 import React from "react";
 import "./EigenspaceInfo.scss";
 import { type Eigenspace } from "../lib/math";
-import { type Complex } from "mathjs";
 
 interface EigenspaceInfoProps {
 	eigenspaces: Eigenspace[];
@@ -11,23 +10,9 @@ const EigenspaceInfo: React.FC<EigenspaceInfoProps> = ({ eigenspaces }) => {
 	const formatVector = (vec: number[]) =>
 		`[${vec.map((n) => n.toFixed(5)).join(", ")}]`;
 
-	const formatEigenvalue = (eigenvalue: number | Complex) => {
-		if (typeof eigenvalue === "number") {
+	const formatEigenvalue = (eigenvalue: number) => {
 			return eigenvalue.toFixed(5);
-		} else {
-			// Handle Complex numbers
-			const complex = eigenvalue as Complex;
-			if (complex.im === 0) {
-				return complex.re.toFixed(3);
-			} else if (complex.re === 0) {
-				return `${complex.im.toFixed(3)}i`;
-			} else {
-				const sign = complex.im >= 0 ? "+" : "-";
-				return `${complex.re.toFixed(3)} ${sign} ${Math.abs(complex.im).toFixed(
-					3
-				)}i`;
-			}
-		}
+
 	};
 
 	const getEigenspaceDimension = (eigenspace: Eigenspace) => {
@@ -75,7 +60,7 @@ const EigenspaceInfo: React.FC<EigenspaceInfoProps> = ({ eigenspaces }) => {
 									style={{ backgroundColor: color }}
 								></div>
 								<span className="eigenvalue-label">
-									λ = {formatEigenvalue(eigenspace.eigenvalue)}
+									λ = {formatEigenvalue(eigenspace.eigenvalue.value)}
 								</span>
 								<span className="eigenspace-type">{eigenspaceType}</span>
 							</div>

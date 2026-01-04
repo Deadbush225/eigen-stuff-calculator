@@ -1,4 +1,3 @@
-import { type Complex } from "mathjs";
 import {
 	calculateTraceManual,
 	findNullSpace,
@@ -153,13 +152,15 @@ function solveCharacteristicPolynomial(
 
 function findEigenvectorBasis(
 	xIMinusA: (string | number)[][],
-	eigenvalue: number | Complex
+	eigenvalue: Eigenvalue
 ): Eigenspace {
 	const xIMinusACopy = JSON.parse(JSON.stringify(xIMinusA)) as (
 		| string
 		| number
 	)[][];
 	// console.log("xI - A matrix:", formatMatrix(xIMinusACopy));
+
+	console.log("Finding eigenvector basis for eigenvalue:", eigenvalue);
 
 	for (let i = 0; i < xIMinusACopy.length; i++) {
 		for (let j = 0; j < xIMinusACopy[i].length; j++) {
@@ -168,7 +169,7 @@ function findEigenvectorBasis(
 				const x = math.evaluate(
 					(xIMinusACopy[i][j] as string).replace(
 						/x/g,
-						`${eigenvalue.toString()}`
+						`${eigenvalue.value.toString()}`
 					)
 				);
 
@@ -268,7 +269,7 @@ export function findEigenvalues(inputMatrix: number[][]): EigenResult {
 	if (validatedEigenvalues.length !== 0) {
 		for (const val of validatedEigenvalues) {
 			// console.log("Finding eigenvector basis for eigenvalue:", val);
-			const eigenspace = findEigenvectorBasis(xIMinusA, val.value);
+			const eigenspace = findEigenvectorBasis(xIMinusA, val);
 			eigenspaces.push(eigenspace);
 		}
 	}

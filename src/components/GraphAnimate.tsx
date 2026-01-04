@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { and, type Complex } from "mathjs";
 
 import { type Eigenspace } from "../lib/math";
 
@@ -546,12 +545,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 
 				const color = eigenspaceColors[index % eigenspaceColors.length];
 				const colorHex = parseInt(color.replace("#", ""), 16);
-				const eigenvalue =
-					typeof eigenspace.eigenvalue === "number"
-						? eigenspace.eigenvalue.toFixed(3)
-						: `${(eigenspace.eigenvalue as Complex).re.toFixed(3)}+${(
-								eigenspace.eigenvalue as Complex
-						  ).im.toFixed(3)}i`;
+				const eigenvalue = eigenspace.eigenvalue.value.toFixed(3);
 
 				// Convert basis vectors to numerical format for visualization
 				const numericBasis = eigenspace.basis.map((vec: (string | number)[]) =>
