@@ -124,7 +124,7 @@ function MatrixInput({
     <>
 			<div className="controls">
 				<h2>MATRIX INPUT</h2>
-				<div className="size-control">
+				<div id="matrix-size-control" className="size-control">
 					<label htmlFor="matrix-size">Matrix Size (n×n): </label>
 					<input
 						id="matrix-size"
@@ -148,7 +148,9 @@ function MatrixInput({
 				<h3>
 					Matrix ({size}×{size})
 				</h3>
-				{renderMatrix()}
+				<div id="matrix-input-grid">
+					{renderMatrix()}
+				</div>
 			</div>
       </>
 	);

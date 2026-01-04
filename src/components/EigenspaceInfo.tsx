@@ -57,7 +57,7 @@ const EigenspaceInfo: React.FC<EigenspaceInfoProps> = ({ eigenspaces }) => {
 	}
 
 	return (
-		<div className="eigenspace-info">
+		<div id="eigenspaces-info" className="eigenspace-info">
 			<h3>Eigenspaces Analysis</h3>
 			<div className="eigenspace-list">
 				{eigenspaces.map((eigenspace, index) => {

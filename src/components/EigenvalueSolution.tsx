@@ -57,7 +57,7 @@ const EigenvalueSolution: React.FC<EigenvalueSolutionProps> = memo(
 		}
 
 		return (
-			<div className="eigenvalue-solution">
+			<div id="eigenvalue-solution" className="eigenvalue-solution">
 				<h3>Eigenvalue Calculation Steps</h3>
 				{solution}
 			</div>

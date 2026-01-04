@@ -7,6 +7,109 @@
   background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
 }
 
+/* Tour Button Styles */
+.tour-button {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 1000;
+  background: linear-gradient(135deg, #646cff, #4f46e5);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  /* padding: 12px 20px; */
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(100, 108, 255, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tour-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(100, 108, 255, 0.4);
+  background: linear-gradient(135deg, #5a5fcf, #4338ca);
+}
+
+.tour-button:active {
+  transform: translateY(0);
+}
+
+/* Custom Intro.js Styling */
+.introjs-tooltip {
+  background: linear-gradient(135deg, #1e293b, #334155) !important;
+  color: #f8fafc !important;
+  border: 1px solid #475569 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+  max-width: 400px !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.introjs-tooltip-title {
+  color: #646cff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  margin-bottom: 10px !important;
+}
+
+.introjs-tooltiptext {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: #e2e8f0 !important;
+}
+
+.introjs-button {
+  background: linear-gradient(135deg, #646cff, #4f46e5) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.introjs-button:hover {
+  background: linear-gradient(135deg, #5a5fcf, #4338ca) !important;
+  transform: translateY(-1px) !important;
+}
+
+.introjs-skipbutton {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border: 1px solid #475569 !important;
+}
+
+.introjs-skipbutton:hover {
+  background: #374151 !important;
+  color: #f1f5f9 !important;
+}
+
+.introjs-helperLayer {
+  background: rgba(0, 0, 0, 0.7) !important;
+  border: 2px solid #646cff !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6) !important;
+}
+
+.introjs-overlay {
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+
+.introjs-progress {
+  background: #475569 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+.introjs-progressbar {
+  background: linear-gradient(90deg, #646cff, #4f46e5) !important;
+  border-radius: 10px !important;
+}
+
 button:focus {
   outline: none
 }

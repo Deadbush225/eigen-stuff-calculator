@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MatrixInput from "./components/MatrixInput";
 import GraphAnimate from "./components/GraphAnimate";
 import TransformationLegend from "./components/VisualizationLegend";
 import EigenspaceInfo from "./components/EigenspaceInfo";
 import Navbar from "./components/Navbar";
 import About from "./components/About";
+import Tour from "./components/Tour";
 import "./App.css";
 import { type Eigenspace } from "./lib/eigen-types";
 import EigenvalueSolution from "./components/EigenvalueSolution";
@@ -15,6 +16,7 @@ function App() {
 	const [activeSection, setActiveSection] = useState<"calculator" | "about">(
 		"calculator"
 	);
+	const [showTour, setShowTour] = useState<boolean>(false);
 
 	const handleMatrixChange = (newMatrix: number[][]) => {
 		setMatrix(newMatrix);
@@ -29,6 +31,17 @@ function App() {
 	const handleSectionChange = (section: "calculator" | "about") => {
 		setActiveSection(section);
 		window.scrollTo(0, 0);
+	};
+
+	const startTour = () => {
+		if (activeSection !== "calculator") {
+			setActiveSection("calculator");
+		}
+		setShowTour(true);
+	};
+
+	const handleTourComplete = () => {
+		setShowTour(false);
 	};
 
 	const textLabel: {
@@ -46,12 +59,29 @@ function App() {
 		},
 	};
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTour(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
 	return (
 		<div className="App">
 			<Navbar
 				activeSection={activeSection}
 				onSectionChange={handleSectionChange}
 			/>
+
+			{/* Tour Button */}
+			{activeSection === "calculator" && (
+				<button className="tour-button" onClick={startTour}>
+					🎯 Take a Tour
+				</button>
+			)}
+
+			{/* Tour Component */}
+			<Tour startTour={showTour} onTourComplete={handleTourComplete} />
 
 			{activeSection === "calculator" ? (
 				<div className="calculator-section">
@@ -70,7 +100,7 @@ function App() {
 					<div className="visualization-container">
 						<EigenspaceInfo eigenspaces={basisVectors} />
 						{[2, 3].includes(matrix.length) && (
-							<div className="visualization-section">
+							<div id="visualization-section" className="visualization-section">
 								<h2>
 									{textLabel[matrix.length].dimension} Matrix Transformation
 									Visualization
@@ -90,10 +120,12 @@ function App() {
 									transformationMatrix={matrix}
 									eigenspaces={basisVectors}
 								/>
-								<TransformationLegend
-									transformationMatrix={matrix}
-									eigenspaces={basisVectors}
-								/>
+								<div id="visualization-legend">
+									<TransformationLegend
+										transformationMatrix={matrix}
+										eigenspaces={basisVectors}
+									/>
+								</div>
 							</div>
 						)}
 					</div>
