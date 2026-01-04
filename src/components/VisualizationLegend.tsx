@@ -111,14 +111,7 @@ const TransformationLegend: React.FC<TransformationLegendProps> = ({
 						<div className="color-box basis-vectors"></div>
 						<span>Elementary basis vectors (arrows with points)</span>
 					</div>
-					<div className="key-item">
-						<div className="color-box grid-original"></div>
-						<span>Original coordinate grids (light gray)</span>
-					</div>
-					<div className="key-item">
-						<div className="color-box grid-transformed"></div>
-						<span>Transformed grids (colored)</span>
-					</div>
+					
 					{eigenspaces.length > 0 && (
 						<>
 							<div className="key-item">

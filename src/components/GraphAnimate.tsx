@@ -9,6 +9,113 @@ interface MathBoxSceneProps {
 	eigenspaces?: Eigenspace[];
 }
 
+let isAndroidNonFirefox: boolean = true;
+let isAndroid: boolean = true;
+
+// Create WebGL renderer with conservative settings for Android
+isAndroidNonFirefox =
+	/Android/i.test(navigator.userAgent) && !/Firefox/i.test(navigator.userAgent);
+
+const renderer = new THREE.WebGLRenderer({
+	antialias: !isAndroidNonFirefox,
+	alpha: true,
+	powerPreference: isAndroidNonFirefox ? "default" : "high-performance",
+	preserveDrawingBuffer: isAndroidNonFirefox,
+});
+
+// Create materials
+const lineMaterial = (color: number, linewidth: number = 1) =>
+	new THREE.LineBasicMaterial({
+		color: color,
+		linewidth: isAndroidNonFirefox ? Math.max(linewidth, 2) : linewidth,
+	});
+
+const pointMaterial = (color: number, size: number = 1) =>
+	new THREE.PointsMaterial({
+		color: color,
+		size: isAndroidNonFirefox ? size * 1.5 : size,
+		sizeAttenuation: false,
+	});
+
+// Helper function to create line geometry
+const createLine = (
+	points: number[][],
+	color: number,
+	linewidth: number = 1,
+	opacity?: number
+) => {
+	const geometry = new THREE.BufferGeometry().setFromPoints(
+		points.map((p) => new THREE.Vector3(p[0], p[1], p[2]))
+	);
+	const line = new THREE.Line(geometry, lineMaterial(color, linewidth));
+	line.material.transparent = true;
+	line.material.opacity =
+		opacity !== undefined ? opacity : isAndroid ? 0.2 : 0.8;
+
+	return line;
+};
+
+// Helper function to create points
+const createPoints = (points: number[][], color: number, size: number = 1) => {
+	const geometry = new THREE.BufferGeometry().setFromPoints(
+		points.map((p) => new THREE.Vector3(p[0], p[1], p[2]))
+	);
+	const pointsObj = new THREE.Points(geometry, pointMaterial(color, size));
+	return pointsObj;
+};
+
+// Helper function to create text labels with constant screen size
+const createTextLabel = (
+	text: string,
+	position: THREE.Vector3,
+	color: number = 0x000000
+) => {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d")!;
+	canvas.width = 512;
+	canvas.height = 256;
+
+	// Clear canvas with transparent background
+	//   context.clearRect(0, 0, canvas.width, canvas.height);
+
+	// Add semi-transparent background for better visibility
+	//   context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+	//   context.fillRect(0, 0, canvas.width, canvas.height);
+
+	// Set up text styling
+	context.fillStyle = `#${color.toString(16).padStart(6, "0")}`;
+	context.font = `bold ${isAndroidNonFirefox ? 48 : 64}px Arial`;
+	context.textAlign = "center";
+	context.textBaseline = "middle";
+
+	// Add white stroke for better visibility
+	context.strokeStyle = "#ffffff";
+	context.lineWidth = 7;
+	context.strokeText(text, canvas.width / 2, canvas.height / 2);
+
+	// Fill the text
+	context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+	const texture = new THREE.CanvasTexture(canvas);
+	const material = new THREE.SpriteMaterial({
+		map: texture,
+		sizeAttenuation: false, // This makes the sprite maintain constant screen size
+		transparent: true,
+		alphaTest: 0.1, // Prevents z-fighting issues
+		depthTest: false, // Disable depth testing to prevent flickering
+		depthWrite: false, // Don't write to depth buffer
+	});
+	const sprite = new THREE.Sprite(material);
+	sprite.position.copy(position);
+	sprite.renderOrder = 1000; // Render labels on top of everything else
+
+	// Make text labels much bigger
+	const screenScale = isAndroidNonFirefox ? 0.4 : 0.5;
+	sprite.scale.set(screenScale, screenScale * 0.5, 1);
+
+	return sprite;
+};
+
 const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 	transformationMatrix = [
 		[3, 1, 0],
@@ -24,8 +131,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 
 		// Store reference to container for cleanup
 		const container = containerRef.current;
-    // Detect if Android device
-    const isAndroid = /Android/i.test(navigator.userAgent);
+		// Detect if Android device
+		isAndroid = /Android/i.test(navigator.userAgent);
 
 		// Determine matrix dimensions and create appropriate transformation
 		const matrixSize = transformationMatrix.length;
@@ -55,18 +162,6 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			camera.up.set(0, 0, 1); // Z is the up direction
 		}
 
-		// Create WebGL renderer with conservative settings for Android
-		const isAndroidNonFirefox =
-			/Android/i.test(navigator.userAgent) &&
-			!/Firefox/i.test(navigator.userAgent);
-
-		const renderer = new THREE.WebGLRenderer({
-			antialias: !isAndroidNonFirefox,
-			alpha: true,
-			powerPreference: isAndroidNonFirefox ? "default" : "high-performance",
-			preserveDrawingBuffer: isAndroidNonFirefox,
-		});
-
 		renderer.setSize(container.clientWidth, container.clientHeight);
 		renderer.setPixelRatio(
 			Math.min(window.devicePixelRatio, isAndroidNonFirefox ? 2 : 3)
@@ -86,102 +181,6 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 		controls.enableZoom = true;
 		controls.enablePan = true;
 		controls.enableRotate = true;
-
-		// Create materials
-		const lineMaterial = (color: number, linewidth: number = 1) =>
-			new THREE.LineBasicMaterial({
-				color: color,
-				linewidth: isAndroidNonFirefox ? Math.max(linewidth, 2) : linewidth,
-			});
-
-		const pointMaterial = (color: number, size: number = 1) =>
-			new THREE.PointsMaterial({
-				color: color,
-				size: isAndroidNonFirefox ? size * 1.5 : size,
-				sizeAttenuation: false,
-			});
-
-		// Helper function to create line geometry
-		const createLine = (
-			points: number[][],
-			color: number,
-			linewidth: number = 1,
-			opacity?: number
-		) => {
-			const geometry = new THREE.BufferGeometry().setFromPoints(
-				points.map((p) => new THREE.Vector3(p[0], p[1], p[2]))
-			);
-			const line = new THREE.Line(geometry, lineMaterial(color, linewidth));
-			line.material.transparent = true;
-			line.material.opacity = opacity !== undefined ? opacity : isAndroid ? 0.2 : 0.8;
-
-			return line;
-		};
-
-		// Helper function to create points
-		const createPoints = (
-			points: number[][],
-			color: number,
-			size: number = 1
-		) => {
-			const geometry = new THREE.BufferGeometry().setFromPoints(
-				points.map((p) => new THREE.Vector3(p[0], p[1], p[2]))
-			);
-			const pointsObj = new THREE.Points(geometry, pointMaterial(color, size));
-			return pointsObj;
-		};
-
-		// Helper function to create text labels with constant screen size
-		const createTextLabel = (
-			text: string,
-			position: THREE.Vector3,
-			color: number = 0x000000
-		) => {
-			const canvas = document.createElement("canvas");
-			const context = canvas.getContext("2d")!;
-			canvas.width = 512;
-			canvas.height = 256;
-
-			// Clear canvas with transparent background
-			//   context.clearRect(0, 0, canvas.width, canvas.height);
-
-			// Add semi-transparent background for better visibility
-			//   context.fillStyle = 'rgba(255, 255, 255, 0.8)';
-			//   context.fillRect(0, 0, canvas.width, canvas.height);
-
-			// Set up text styling
-			context.fillStyle = `#${color.toString(16).padStart(6, "0")}`;
-			context.font = `bold ${isAndroidNonFirefox ? 48 : 64}px Arial`;
-			context.textAlign = "center";
-			context.textBaseline = "middle";
-
-			// Add white stroke for better visibility
-			context.strokeStyle = "#ffffff";
-			context.lineWidth = 7;
-			context.strokeText(text, canvas.width / 2, canvas.height / 2);
-
-			// Fill the text
-			context.fillText(text, canvas.width / 2, canvas.height / 2);
-
-			const texture = new THREE.CanvasTexture(canvas);
-			const material = new THREE.SpriteMaterial({
-				map: texture,
-				sizeAttenuation: false, // This makes the sprite maintain constant screen size
-				transparent: true,
-				alphaTest: 0.1, // Prevents z-fighting issues
-				depthTest: false, // Disable depth testing to prevent flickering
-				depthWrite: false, // Don't write to depth buffer
-			});
-			const sprite = new THREE.Sprite(material);
-			sprite.position.copy(position);
-			sprite.renderOrder = 1000; // Render labels on top of everything else
-
-			// Make text labels much bigger
-			const screenScale = isAndroidNonFirefox ? 0.4 : 0.5;
-			sprite.scale.set(screenScale, screenScale * 0.5, 1);
-
-			return sprite;
-		};
 
 		// 1. Draw coordinate axes
 		const axisLength = 5;
@@ -231,61 +230,69 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 		// 2. Draw grid
 		const gridSize = 10;
 		const gridStep = 1;
-		const gridLines = [];
+		const gridLines: [number[][], number][] = [];
 
-		// XY plane grid (light gray)
+		// Additional grids for 3D (lighter and fewer lines for performance)
 		for (let i = -gridSize / 2; i <= gridSize / 2; i++) {
+			// XY plane grid (light gray)
 			if (i !== 0) {
 				// Don't draw over axes
 				gridLines.push([
-					[-gridSize / 2, i * gridStep, 0],
-					[gridSize / 2, i * gridStep, 0],
+					[
+						[-gridSize / 2, i * gridStep, 0],
+						[gridSize / 2, i * gridStep, 0],
+					],
+					0xff0000,
 				]);
 				gridLines.push([
-					[i * gridStep, -gridSize / 2, 0],
-					[i * gridStep, gridSize / 2, 0],
+					[
+						[i * gridStep, -gridSize / 2, 0],
+						[i * gridStep, gridSize / 2, 0],
+					],
+					0xff0000,
 				]);
 			}
-		}
 
-		gridLines.forEach((line) => {
-			scene.add(createLine(line, 0xcccccc, 1));
-		});
-
-		// Additional grids for 3D (lighter and fewer lines for performance)
-		if (!is2D && !isAndroidNonFirefox) {
-			const additionalGridLines = [];
-
-			// XZ plane
-			for (let i = -gridSize / 2; i <= gridSize / 2; i++) {
+			if (!is2D && !isAndroidNonFirefox) {
+				// XZ plane
 				if (i !== 0) {
-					additionalGridLines.push([
-						[-gridSize / 2, 0, i * gridStep],
-						[gridSize / 2, 0, i * gridStep],
+					gridLines.push([
+						[
+							[-gridSize / 2, 0, i * gridStep],
+							[gridSize / 2, 0, i * gridStep],
+						],
+						0x00ff00,
 					]);
-					additionalGridLines.push([
-						[i * gridStep, 0, -gridSize / 2],
-						[i * gridStep, 0, gridSize / 2],
+					gridLines.push([
+						[
+							[i * gridStep, 0, -gridSize / 2],
+							[i * gridStep, 0, gridSize / 2],
+						],
+						0x00ff00,
+					]);
+				}
+
+				// YZ plane
+				if (i !== 0) {
+					gridLines.push([
+						[
+							[0, -gridSize / 2, i * gridStep],
+							[0, gridSize / 2, i * gridStep],
+						],
+						0x0000ff,
+					]);
+					gridLines.push([
+						[
+							[0, i * gridStep, -gridSize / 2],
+							[0, i * gridStep, gridSize / 2],
+						],
+						0x0000ff,
 					]);
 				}
 			}
 
-			// YZ plane
-			for (let i = -gridSize / 2; i <= gridSize / 2; i++) {
-				if (i !== 0) {
-					additionalGridLines.push([
-						[0, -gridSize / 2, i * gridStep],
-						[0, gridSize / 2, i * gridStep],
-					]);
-					additionalGridLines.push([
-						[0, i * gridStep, -gridSize / 2],
-						[0, i * gridStep, gridSize / 2],
-					]);
-				}
-			}
-
-			additionalGridLines.forEach((line) => {
-				scene.add(createLine(line, 0xdddddd, 1));
+			gridLines.forEach((line) => {
+				scene.add(createLine(line[0], line[1], 1, 0.3));
 			});
 		}
 
@@ -293,7 +300,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 		const basisLineWidth = isAndroidNonFirefox ? 8 : 6;
 		const pointSize = isAndroidNonFirefox ? 12 : 8;
 
-    const textOffset = 0.3;
+		const textOffset = 0.3;
 
 		// e1 = [1, 0, 0] - unit vector along X (red)
 		scene.add(
@@ -303,11 +310,18 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 					[1, 0, 0],
 				],
 				0xcc0000,
-				basisLineWidth,1
+				basisLineWidth,
+				1
 			)
 		);
 		scene.add(createPoints([[1, 0, 0]], 0xcc0000, pointSize));
-		scene.add(createTextLabel("e₁", new THREE.Vector3(1.1, 0.1, 0 - textOffset), 0xcc0000));
+		scene.add(
+			createTextLabel(
+				"e₁",
+				new THREE.Vector3(1.1, 0.1, 0 - textOffset),
+				0xcc0000
+			)
+		);
 
 		// e2 = [0, 1, 0] - unit vector along Y (green)
 		scene.add(
@@ -322,7 +336,13 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			)
 		);
 		scene.add(createPoints([[0, 1, 0]], 0x00cc00, pointSize));
-		scene.add(createTextLabel("e₂", new THREE.Vector3(0.1, 1.1, 0 - textOffset), 0x00cc00));
+		scene.add(
+			createTextLabel(
+				"e₂",
+				new THREE.Vector3(0.1, 1.1, 0 - textOffset),
+				0x00cc00
+			)
+		);
 
 		// e3 = [0, 0, 1] - unit vector along Z (blue) - only for 3D
 		if (!is2D) {
@@ -333,12 +353,17 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 						[0, 0, 1],
 					],
 					0x0000cc,
-					basisLineWidth,1
+					basisLineWidth,
+					1
 				)
 			);
 			scene.add(createPoints([[0, 0, 1]], 0x0000cc, pointSize));
 			scene.add(
-				createTextLabel("e₃", new THREE.Vector3(0.1, 0, 1.1 - textOffset), 0x0000cc)
+				createTextLabel(
+					"e₃",
+					new THREE.Vector3(0.1, 0, 1.1 - textOffset),
+					0x0000cc
+				)
 			);
 		}
 
@@ -400,9 +425,9 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 
 		// Transformed e2 (green)
 		scene.add(
-			createLine([[0, 0, 0], e2_transformed], 0x44AB44, transformedLineWidth)
+			createLine([[0, 0, 0], e2_transformed], 0x44ab44, transformedLineWidth)
 		);
-		scene.add(createPoints([e2_transformed], 0x44AB44, transformedPointSize));
+		scene.add(createPoints([e2_transformed], 0x44ab44, transformedPointSize));
 		scene.add(
 			createTextLabel(
 				"Ae₂",
@@ -411,7 +436,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 					e2_transformed[1] + 0.1,
 					e2_transformed[2] + textOffset
 				),
-				0x44AB44
+				0x44ab44
 			)
 		);
 
@@ -469,7 +494,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			createLine(
 				[transformedXStart, transformedXEnd],
 				0xff6666,
-				transformedAxisWidth, 1
+				transformedAxisWidth,
+				1
 			)
 		);
 
@@ -480,7 +506,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			createLine(
 				[transformedYStart, transformedYEnd],
 				0x66ff66,
-				transformedAxisWidth, 1
+				transformedAxisWidth,
+				1
 			)
 		);
 
@@ -492,32 +519,73 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 				createLine(
 					[transformedZStart, transformedZEnd],
 					0x6666ff,
-					transformedAxisWidth, 1
+					transformedAxisWidth,
+					1
 				)
 			);
 		}
 
 		// 7. Draw transformed grid (fewer lines for performance)
-		if (!isAndroidNonFirefox) {
+		if (!isAndroid) {
 			// Skip on Android for performance
-			const transformedGridLines = [];
-			const gridDensity = 2; // Sparser grid for performance
+			const transformedGridLines: [number[][], number][] = [];
 
-			for (let i = -gridSize / 2; i <= gridSize / 2; i += gridDensity) {
+			const XY = 0xff9999;
+			const XZ = 0x99ff99;
+			const YZ = 0x9999ff;
+
+			for (let i = -gridSize / 2; i <= gridSize / 2; i += 1) {
 				if (i !== 0) {
 					// XY plane grid lines
 					const line1Start = transformAxis([-gridSize / 2, i * gridStep, 0]);
 					const line1End = transformAxis([gridSize / 2, i * gridStep, 0]);
-					transformedGridLines.push([line1Start, line1End]);
+					transformedGridLines.push([[line1Start, line1End], XY]);
 
 					const line2Start = transformAxis([i * gridStep, -gridSize / 2, 0]);
 					const line2End = transformAxis([i * gridStep, gridSize / 2, 0]);
-					transformedGridLines.push([line2Start, line2End]);
+					transformedGridLines.push([[line2Start, line2End], XY]);
+
+					// For 3D, also add XZ and YZ plane grid lines (useful to visualize full transformed grid)
+					if (!is2D) {
+						// XZ plane (Y = 0)
+						const xzLine1Start = transformAxis([
+							-gridSize / 2,
+							0,
+							i * gridStep,
+						]);
+						const xzLine1End = transformAxis([gridSize / 2, 0, i * gridStep]);
+						transformedGridLines.push([[xzLine1Start, xzLine1End], XZ]);
+
+						const xzLine2Start = transformAxis([
+							i * gridStep,
+							0,
+							-gridSize / 2,
+						]);
+						const xzLine2End = transformAxis([i * gridStep, 0, gridSize / 2]);
+						transformedGridLines.push([[xzLine2Start, xzLine2End], XZ]);
+
+						// YZ plane (X = 0)
+						const yzLine1Start = transformAxis([
+							0,
+							-gridSize / 2,
+							i * gridStep,
+						]);
+						const yzLine1End = transformAxis([0, gridSize / 2, i * gridStep]);
+						transformedGridLines.push([[yzLine1Start, yzLine1End], YZ]);
+
+						const yzLine2Start = transformAxis([
+							0,
+							i * gridStep,
+							-gridSize / 2,
+						]);
+						const yzLine2End = transformAxis([0, i * gridStep, gridSize / 2]);
+						transformedGridLines.push([[yzLine2Start, yzLine2End], YZ]);
+					}
 				}
 			}
 
 			transformedGridLines.forEach((line) => {
-				scene.add(createLine(line, 0xff9999, 1)); // Light red for transformed grid
+				scene.add(createLine(line[0], line[1], 1, 0.5)); // Light red for transformed grid
 			});
 		}
 
@@ -600,7 +668,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 								[scaledVector[0] * 2, scaledVector[1] * 2, scaledVector[2] * 2],
 							],
 							colorHex,
-							eigenLineWidth, 0.4
+							eigenLineWidth,
+							0.4
 						)
 					);
 
@@ -679,9 +748,9 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 
 					// Add eigenvalue label
 					const midpoint = [
-						(workingV1[0] + workingV2[0]) / 2 + 0.3,
-						(workingV1[1] + workingV2[1]) / 2 + 0.3,
-						(workingV1[2] + workingV2[2]) / 2 + 0.3,
+						(workingV1[0] + workingV2[0]) / 2 + 1,
+						(workingV1[1] + workingV2[1]) / 2 + 1,
+						(workingV1[2] + workingV2[2]) / 2 + 1,
 					];
 
 					scene.add(
