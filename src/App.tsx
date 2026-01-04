@@ -7,7 +7,7 @@ import Navbar from "./components/Navbar";
 import About from "./components/About";
 import Tour from "./components/Tour";
 import "./App.css";
-import { type Eigenspace } from "./lib/eigen-types";
+import { type Eigenspace } from "./lib/math";
 import EigenvalueSolution from "./components/EigenvalueSolution";
 
 function App() {

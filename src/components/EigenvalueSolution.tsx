@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useEffect } from "react";
 import { findEigenvalues } from "../lib/eigenStuffFinder";
-import { type Eigenspace } from "../lib/eigen-types";
+import { type Eigenspace } from "../lib/math";
 import "./EigenvalueSolution.scss";
 import MathDisplay from "./util/MathDisplay";
 import {

@@ -1,7 +1,4 @@
-// Type definitions
-type MatrixWString = (string | number)[][];
-type Matrix = number[][];
-type BasisVector = number[][];
+import type { MatrixWString, Matrix, BasisVector } from "./math";
 
 /* ━━━━━━━━━━━━ Elementary Row Operations ━━━━━━━━━━━ */
 // E1: Row swap

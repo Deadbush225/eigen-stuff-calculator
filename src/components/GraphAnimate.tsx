@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { and, type Complex } from "mathjs";
 
-import { type Eigenspace } from "../lib/eigen-types";
+import { type Eigenspace } from "../lib/math";
 
 interface MathBoxSceneProps {
 	transformationMatrix?: number[][];

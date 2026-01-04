@@ -18,7 +18,7 @@ import {
 } from "./determinantFinder";
 import { cleanExpressionLatex, formatXIMinusAMatrix } from "./latexFormatter";
 import { expandPolynomialManual } from "./expressionDeflater";
-import { type Eigenspace } from "./eigen-types";
+import { type Eigenspace } from "./math";
 // Type alias for clarity: A polynomial is an array of coefficients [an, ..., a0]
 
 /**

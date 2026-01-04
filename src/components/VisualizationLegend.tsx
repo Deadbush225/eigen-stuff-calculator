@@ -1,6 +1,6 @@
 import React from "react";
 import "./VisualizationLegend.scss";
-import { type Eigenspace } from "../lib/eigen-types";
+import { type Eigenspace } from "../lib/math";
 
 interface TransformationLegendProps {
 	transformationMatrix: number[][];

@@ -1,6 +1,6 @@
 import React from "react";
 import "./EigenspaceInfo.scss";
-import { type Eigenspace } from "../lib/eigen-types";
+import { type Eigenspace } from "../lib/math";
 import { type Complex } from "mathjs";
 
 interface EigenspaceInfoProps {
