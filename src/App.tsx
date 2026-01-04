@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar";
 import About from "./components/About";
 import "./App.css";
 import { type Eigenspace } from "./lib/eigen-types";
+import EigenvalueSolution from "./components/EigenvalueSolution";
 
 function App() {
 	const [matrix, setMatrix] = useState<number[][]>([]);
@@ -54,10 +55,17 @@ function App() {
 
 			{activeSection === "calculator" ? (
 				<div className="calculator-section">
-					<MatrixInput
-						onMatrixChange={handleMatrixChange}
-						onEigenspacesChange={handleEigenspacesChange}
-					/>
+					<div className="matrix-input-container">
+						<MatrixInput
+							onMatrixChange={handleMatrixChange}
+							onEigenspacesChange={handleEigenspacesChange}
+						/>
+
+						<EigenvalueSolution
+							matrix={matrix}
+							onEigenspacesCalculated={handleEigenspacesChange}
+						/>
+					</div>
 
 					<div className="visualization-container">
 						<EigenspaceInfo eigenspaces={basisVectors} />

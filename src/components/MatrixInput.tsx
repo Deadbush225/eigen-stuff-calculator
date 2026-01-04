@@ -121,7 +121,7 @@ function MatrixInput({
 	);
 
 	return (
-		<div className="matrix-input-container">
+    <>
 			<div className="controls">
 				<h2>MATRIX INPUT</h2>
 				<div className="size-control">
@@ -150,12 +150,7 @@ function MatrixInput({
 				</h3>
 				{renderMatrix()}
 			</div>
-
-			<EigenvalueSolution
-				matrix={matrix}
-				onEigenspacesCalculated={handleEigenspacesCalculated}
-			/>
-		</div>
+      </>
 	);
 }
 

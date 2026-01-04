@@ -61,12 +61,13 @@ h6 {
 }
 
 
-h4, h4 *{
+h4,
+h4 * {
   color: #007acc !important;
 }
 
 .visualization-container {
-  padding: 1em;
+  padding: 20px;
   margin: 0 auto;
   max-width: 1200px;
 }

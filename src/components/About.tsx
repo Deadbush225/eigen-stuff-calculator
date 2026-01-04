@@ -8,7 +8,7 @@ const MemberCard: React.FC<{ Fname: string; Lname: string; path: string }> = ({
 	path,
 }) => (
 	<div className="member-card">
-		<img src={path} alt={`${Fname} ${Lname}`} className="member-photo" />
+		<img src={`/profiles/${path}`} alt={`${Fname} ${Lname}`} className="member-photo" />
 		<h3 style={{ margin: 0 }}>{Lname}</h3>
 		<p style={{ margin: 0 }}>{Fname}</p>
 	</div>
@@ -37,27 +37,27 @@ const About: React.FC = () => {
 								<MemberCard
 									Fname="Eliazar"
 									Lname="INSO"
-									path="/profiles/inso.jpg"
+									path="inso.jpg"
 								/>
 								<MemberCard
 									Fname="Mark Elijah"
 									Lname="SEVILLA"
-									path="/profiles/sevilla.jpg"
+									path="sevilla.jpg"
 								/>
 								<MemberCard
 									Fname="Jan Earl"
 									Lname="RODRIGUEZ"
-									path="/profiles/rodriguez.jpg"
+									path="rodriguez.jpg"
 								/>
 								<MemberCard
 									Fname="Hanzlei"
 									Lname="JAMISON"
-									path="/profiles/jamison.jpg"
+									path="jamison.jpg"
 								/>
 								<MemberCard
 									Fname="Mariel"
 									Lname="OLIVEROS"
-									path="/profiles/oliveros.jpg"
+									path="oliveros.jpg"
 								/>
 							</div>
 						</div>
