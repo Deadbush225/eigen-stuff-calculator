@@ -59,17 +59,6 @@ function App() {
 						onEigenspacesChange={handleEigenspacesChange}
 					/>
 
-					{/* {matrix.length > 0 && (
-            <div className="matrix-info">
-              <h2>Matrix Information</h2>
-              <p>Current matrix size: {matrix.length}×{matrix[0]?.length || 0}</p>
-              <details>
-                <summary>Raw Matrix Data (JSON)</summary>
-                <pre>{JSON.stringify(matrix, null, 2)}</pre>
-              </details>
-            </div>
-          )} */}
-
 					<div className="visualization-container">
 						<EigenspaceInfo eigenspaces={basisVectors} />
 						{[2, 3].includes(matrix.length) && (

@@ -71,6 +71,23 @@ function MatrixInput({
 		[matrix, onMatrixChange]
 	);
 
+	const handleInputChange = (
+		e: React.ChangeEvent<HTMLInputElement>,
+		rowIdx: number,
+		col: number
+	) => {
+		const value = e.target.value;
+
+		// Update f_matrix state properly
+		const newF_Matrix = f_matrix.map((matrixRow, i) =>
+			matrixRow.map((cell, j) => (i === rowIdx && j === col ? value : cell))
+		);
+		setF_Matrix(newF_Matrix);
+
+		// Only update numeric matrix if value is a valid number
+		updateMatrixValue(rowIdx, col, value === "" ? "0" : value);
+	};
+
 	onMatrixChange?.(matrix);
 
 	const renderMatrix = () => (
@@ -87,24 +104,7 @@ function MatrixInput({
 									<input
 										key={`${rowIdx}-${col}`}
 										value={cellStr}
-										onChange={(e) => {
-											const value = e.target.value;
-
-											// Update f_matrix state properly
-											const newF_Matrix = f_matrix.map((matrixRow, i) =>
-												matrixRow.map((cell, j) =>
-													i === rowIdx && j === col ? value : cell
-												)
-											);
-											setF_Matrix(newF_Matrix);
-
-											// Only update numeric matrix if value is a valid number
-											updateMatrixValue(
-												rowIdx,
-												col,
-												value === "" ? "0" : value
-											);
-										}}
+										onChange={(e) => handleInputChange(e, rowIdx, col)}
 										className={`matrix-cell ${
 											cellStr !== "" && isNaN(parseFloat(cellStr)) ? "red" : ""
 										}`}
