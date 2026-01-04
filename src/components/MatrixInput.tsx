@@ -15,14 +15,14 @@ function MatrixInput({
 	const [size, setSize] = useState<number>(3);
 	const [f_size, setF_Size] = useState<number>(3);
 	const [matrix, setMatrix] = useState<number[][]>([
-		[1, 0, 0],
-		[0, 1, 0],
-		[0, 0, 1],
+		[3, 0, 0],
+		[0, 3, 0],
+		[0, 0, 3],
 	]);
 	const [f_matrix, setF_Matrix] = useState<string[][]>([
-		["1", "", ""],
-		["", "1", ""],
-		["", "", "1"],
+		["3", "1", ""],
+		["", "3", "1"],
+		["", "", "3"],
 	]);
 
 	const handleEigenspacesCalculated = useCallback(

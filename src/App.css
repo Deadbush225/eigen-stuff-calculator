@@ -10,8 +10,8 @@
 /* Tour Button Styles */
 .tour-button {
   position: fixed;
-  top: 80px;
-  right: 20px;
+  top: 5em;
+  right: 0.3em;
   z-index: 1000;
   background: linear-gradient(135deg, #646cff, #4f46e5);
   color: white;

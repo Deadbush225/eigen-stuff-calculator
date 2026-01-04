@@ -11,9 +11,9 @@ interface MathBoxSceneProps {
 
 const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 	transformationMatrix = [
-		[1, 0, 0],
-		[0, 1, 0],
-		[0, 0, 1],
+		[3, 1, 0],
+		[0, 3, 1],
+		[0, 0, 3],
 	],
 	eigenspaces = [],
 }) => {
@@ -105,14 +105,16 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 		const createLine = (
 			points: number[][],
 			color: number,
-			linewidth: number = 1
+			linewidth: number = 1,
+			opacity?: number
 		) => {
 			const geometry = new THREE.BufferGeometry().setFromPoints(
 				points.map((p) => new THREE.Vector3(p[0], p[1], p[2]))
 			);
 			const line = new THREE.Line(geometry, lineMaterial(color, linewidth));
 			line.material.transparent = true;
-			line.material.opacity = isAndroid ? 0.2 : 0.4;
+			line.material.opacity = opacity !== undefined ? opacity : isAndroid ? 0.2 : 0.8;
+
 			return line;
 		};
 
@@ -301,7 +303,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 					[1, 0, 0],
 				],
 				0xcc0000,
-				basisLineWidth
+				basisLineWidth,1
 			)
 		);
 		scene.add(createPoints([[1, 0, 0]], 0xcc0000, pointSize));
@@ -315,7 +317,8 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 					[0, 1, 0],
 				],
 				0x00cc00,
-				basisLineWidth
+				basisLineWidth,
+				1
 			)
 		);
 		scene.add(createPoints([[0, 1, 0]], 0x00cc00, pointSize));
@@ -330,7 +333,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 						[0, 0, 1],
 					],
 					0x0000cc,
-					basisLineWidth
+					basisLineWidth,1
 				)
 			);
 			scene.add(createPoints([[0, 0, 1]], 0x0000cc, pointSize));
@@ -466,7 +469,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			createLine(
 				[transformedXStart, transformedXEnd],
 				0xff6666,
-				transformedAxisWidth
+				transformedAxisWidth, 1
 			)
 		);
 
@@ -477,7 +480,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 			createLine(
 				[transformedYStart, transformedYEnd],
 				0x66ff66,
-				transformedAxisWidth
+				transformedAxisWidth, 1
 			)
 		);
 
@@ -489,7 +492,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 				createLine(
 					[transformedZStart, transformedZEnd],
 					0x6666ff,
-					transformedAxisWidth
+					transformedAxisWidth, 1
 				)
 			);
 		}
@@ -597,7 +600,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 								[scaledVector[0] * 2, scaledVector[1] * 2, scaledVector[2] * 2],
 							],
 							colorHex,
-							eigenLineWidth
+							eigenLineWidth, 0.4
 						)
 					);
 
@@ -708,7 +711,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 						}
 
 						fullSpaceGridLines.forEach((line) => {
-							scene.add(createLine(line, colorHex, 2));
+							scene.add(createLine(line, colorHex, 2, 0.7));
 						});
 
 						// Add label at a visible location
@@ -760,7 +763,7 @@ const MathBoxScene: React.FC<MathBoxSceneProps> = ({
 						}
 
 						fullSpace3DLines.forEach((line) => {
-							scene.add(createLine(line, colorHex, 5));
+							scene.add(createLine(line, colorHex, 5, 0.5));
 						});
 
 						// Add label at origin

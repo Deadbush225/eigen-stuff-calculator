@@ -30,6 +30,14 @@
   gap: 12px;
   margin-bottom: 10px;
   flex-wrap: wrap;
+
+  justify-content: space-between;
+
+  .eigenspace-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 }
 
 .eigenspace-color-indicator {
