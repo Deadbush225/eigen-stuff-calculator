@@ -133,7 +133,7 @@ function App() {
 						pointerEvents: tourButtonOpacity === 0 ? "none" : "auto",
 					}}
 				>
-					🎯 Take a Tour
+					Take a Tour
 				</button>
 			)}
 

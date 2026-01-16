@@ -30,32 +30,29 @@
 
 The **Eigen Stuff Calculator** is an interactive web application designed to help students and educators visualize matrix transformations and eigenvalue concepts in both 2D and 3D space. Built with modern web technologies, it provides real-time 3D visualizations alongside step-by-step mathematical calculations.
 
-### 🌟 Key Features
+### Key Features
 
-**🎯 Interactive Matrix Input**
+**Interactive Matrix Input**
 - Support for 2×2 and 3×3 matrices
-- Real-time validation and feedback
-- Fraction and decimal input support
 
-**📊 3D Visualization Engine**
+**3D Visualization Engine**
 - Real-time WebGL-powered 3D graphics
 - Coordinate system transformations
 - Basis vector animations
 - Eigenspace visualization (lines, planes, and full spaces)
 
-**📐 Mathematical Analysis**
+**Mathematical Analysis**
 - Step-by-step eigenvalue calculation
 - Characteristic polynomial generation
 - Eigenvector and eigenspace computation
-- Null space basis calculation
 
-**🔧 Advanced Features**
+**Advanced Features**
 - Android browser compatibility
 - Mobile-responsive design
 - LaTeX mathematical notation
 - Export visualization data
 
-### 🎨 Visual Elements
+### Visual Elements
 
 - **Coordinate Axes**: Original (thin) and transformed (thick) coordinate systems
 - **Basis Vectors**: Elementary basis vectors (e₁, e₂, e₃) and their transformations (Ae₁, Ae₂, Ae₃)
@@ -157,10 +154,10 @@ The built application will be in the `dist/` directory.
 ## Browser Compatibility
 
 ### Fully Supported
-- ✅ Chrome/Chromium (Desktop & Android)
-- ✅ Firefox (Desktop & Android)
-- ✅ Safari (Desktop & iOS)
-- ✅ Edge (Desktop)
+- Chrome/Chromium (Desktop & Android)
+- Firefox (Desktop & Android)
+- Safari (Desktop & iOS)
+- Edge (Desktop)
 
 ### Mobile Optimizations
 - Conservative WebGL settings for Android devices
