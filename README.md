@@ -27,21 +27,21 @@
 
 ## About The Project
 
-The **Eigen Stuff Calculator** is an interactive web application designed to help students and educators visualize matrix transformations and eigenvalue concepts in both 2D and 3D space. Built with modern web technologies, it provides real-time 3D visualizations alongside step-by-step mathematical calculations.
+Our app **Eigen Stuff Calculator** is an interactive web application designed to help students and educators for showing step by step solutions for solving eigenvalues and finding eigenspaces. It can also visualize matrix transformations and eigenvalue concepts for both 2D and 3D space.
 
 > 💡**Pro Tip: the website have an interactive onboarding for new users so you can go ahead and try it out** <a href="https://tutubi-eigen-stuff-calculator.vercel.app">here</a>
 
 ### Key Features
 
 **Interactive Matrix Input**
-- Support for 2×2 up to 5×5 matrices
+- Support for 1×1 up to 5×5 matrices
 
 **3D Visualization Engine**
 - Visualization for 2×2 and 3×3 matrices
 - Real-time WebGL-powered 3D graphics
-- Coordinate system transformations
-- Basis vector plots
-- Eigenspace visualization (lines, planes, and full spaces)
+  - Coordinate system transformations
+  - Basis vector plots
+  - Eigenspace visualization (lines, planes, and full spaces)
 
 **Mathematical Analysis**
 - Step-by-step eigenvalue calculation
@@ -56,25 +56,33 @@ The **Eigen Stuff Calculator** is an interactive web application designed to hel
 > 💡**Pro Tip: the website has interactive onboarding for new users**
 
 ### 1. Matrix Input
-- Enter your 2×2 up to 5×5 matrix using the interactive input grid
+- Enter your 1×1 up to 5×5 matrix using the interactive input grid
 - Invalid entries are highlighted in red
 
-### 2. Real-time Visualization
-- **3D Scene**: Interactive camera controls (rotate, zoom, pan)
-- **Coordinate Systems**: Original (thin lines) vs. transformed (thick lines)
-- **Basis Vectors**: See how elementary basis vectors transform under your matrix
-- **Eigenspaces**: Color-coded visualization of eigenvalue-associated subspaces
+<img width="1203" height="520" alt="image" src="https://github.com/user-attachments/assets/024ff1c9-3ec3-4108-9ec2-7d686f712c7e" />
 
-### 3. Mathematical Analysis
+### 2. Mathematical Analysis
 - **Step-by-Step Solutions**: Complete eigenvalue calculation process
 - **Characteristic Polynomial**: Automatically generated and solved
 - **Eigenspace Information**: Detailed basis vectors and dimensions
 - **LaTeX Formatting**: Professional mathematical notation
 
+<img width="1282" height="703" alt="image" src="https://github.com/user-attachments/assets/49a56dbf-15f9-470c-9aa2-7a0cb473086f" />
+
+### 3. Real-time Visualization
+- **3D Scene**: Interactive camera controls (rotate, zoom, pan)
+- **Coordinate Systems**: Original (thin lines) vs. transformed (thick lines)
+- **Basis Vectors**: See how elementary basis vectors transform under your matrix
+- **Eigenspaces**: Color-coded visualization of eigenvalue-associated subspaces
+
+<img width="1525" height="856" alt="image" src="https://github.com/user-attachments/assets/9a6f68ae-816e-41b9-bfde-2d2d45eaa8eb" />
+
 ### 4. Educational Features
 - **Transformation Legend**: Explains all visual elements
 - **Color-Coded Elements**: Consistent coloring across visualization and analysis
-- **Mobile Support**: Optimized for tablets and smartphones
+
+<img width="1465" height="628" alt="image" src="https://github.com/user-attachments/assets/21f5eb61-d5aa-49c8-bd45-42ff5e86f1b5" />
+
 
 ## Mathematical Concepts
 
@@ -102,13 +110,13 @@ The **Eigen Stuff Calculator** is an interactive web application designed to hel
 - Larger touch targets and text sizes
 - Reduced geometry complexity for performance
 
-### 🛠️ Built With
+### Built With
 
-- ![React][react-shield] - Frontend framework
-- ![TypeScript][typescript-shield] - Type-safe JavaScript
-- ![Three.js][three-shield] - 3D graphics library
-- ![Vite][vite-shield] - Build tool and development server
-- ![SCSS][scss-shield] - Enhanced CSS preprocessing
+![React][react-shield] - Frontend framework </br>
+![TypeScript][typescript-shield] - Type-safe JavaScript</br>
+![Three.js][three-shield] - 3D graphics library</br>
+![Vite][vite-shield] - Build tool and development server</br>
+![SCSS][scss-shield] - Enhanced CSS preprocessing</br>
 
 ## Getting Started Developing
 
