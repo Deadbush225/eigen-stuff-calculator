@@ -147,47 +147,6 @@ eigen-stuff-calculator/
 └── package.json             # Dependency management 
 ```
 
-```
-src
- ┣ assets
- ┃ ┗ react.svg
- ┣ components
- ┃ ┣ util
- ┃ ┃ ┣ MathDisplay.tsx
- ┃ ┃ ┣ MathSymbols.sass
- ┃ ┃ ┗ MathSymbols.tsx
- ┃ ┣ About.scss
- ┃ ┣ About.tsx
- ┃ ┣ EigenspaceInfo.scss
- ┃ ┣ EigenspaceInfo.tsx
- ┃ ┣ EigenvalueSolution.scss
- ┃ ┣ EigenvalueSolution.tsx
- ┃ ┣ GraphAnimate.tsx
- ┃ ┣ MatrixInput.scss
- ┃ ┣ MatrixInput.tsx
- ┃ ┣ Navbar.scss
- ┃ ┣ Navbar.tsx
- ┃ ┣ Tour.tsx
- ┃ ┣ VisualizationLegend.scss
- ┃ ┗ VisualizationLegend.tsx
- ┣ lib
- ┃ ┣ solver
- ┃ ┃ ┣ usingDiagonalization.ts
- ┃ ┃ ┗ usingRealRoots.ts
- ┃ ┣ determinantFinder.ts
- ┃ ┣ eigenStuffFinder.ts
- ┃ ┣ expressionDeflater.ts
- ┃ ┣ latexFormatter.ts
- ┃ ┣ math.ts
- ┃ ┗ matrixOperations.ts
- ┣ types
- ┃ ┗ react-mathjax2.d.ts
- ┣ App.css
- ┣ App.tsx
- ┣ index.css
- ┗ main.tsx
-```
-
 ### Prerequisites
 
 - **Node.js** (v16 or higher)
