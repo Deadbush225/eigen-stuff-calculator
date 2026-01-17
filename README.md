@@ -120,6 +120,25 @@ Our app **Eigen Stuff Calculator** is an interactive web application designed to
 
 ## Getting Started Developing
 
+### 📁 Project Structure
+```
+eigen-stuff-calculator/
+├── src/                      # Where all source file lives
+│   ├── components/              # All visual components
+│   │   ├── GraphAnimate.tsx        # Core 3D Visualization engine 
+│   │   ├── MatrixInput.tsx         # Interactive matrix input component 
+│   │   ├── EigenvalueSolution.tsx  # Step-by-step component 
+│   │   └── Tour.tsx                # User onboarding component 
+│   ├── lib/                     # All logic and processing 
+│   │   ├── eigenStuffFinder.ts     # Eigenspace computation
+│   │   ├── matrixOperations.ts     # Linear algebra utilities
+│   │   └── determinantFinder.ts    # Determinant logic
+│   ├── App.tsx                 # Main application entry 
+│   └── App.css                 # Global theme and animations 
+├── vite.config.ts           # Build configuration 
+└── package.json             # Dependency management 
+```
+
 ### Prerequisites
 
 - **Node.js** (v16 or higher)
