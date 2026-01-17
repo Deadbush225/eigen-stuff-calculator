@@ -62,12 +62,11 @@ The **Eigen Stuff Calculator** is an interactive web application designed to hel
 
 ### 🛠️ Built With
 
-- [![React][React.js]][React-url] - Frontend framework
-- [![TypeScript][TypeScript]][TypeScript-url] - Type-safe JavaScript
-- [![Three.js][Three.js]][Three-url] - 3D graphics library
-- [![Vite][Vite]][Vite-url] - Build tool and development server
-- [![Math.js][Math.js]][Math-url] - Mathematical expression parser
-- [![SCSS][SCSS]][SCSS-url] - Enhanced CSS preprocessing
+- ![React][react-shield] - Frontend framework
+- ![TypeScript][typescript-shield] - Type-safe JavaScript
+- ![Three.js][three-shield] - 3D graphics library
+- ![Vite][vite-shield] - Build tool and development server
+- ![SCSS][scss-shield] - Enhanced CSS preprocessing
 
 ## Getting Started
 
@@ -187,7 +186,7 @@ Contributions make the open source community amazing! Any contributions you make
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the AGPL 3.0 License. See `LICENSE` for more information.
 
 ## Acknowledgments
 
@@ -212,3 +211,10 @@ Distributed under the MIT License. See `LICENSE` for more information.
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/eliazar-inso-0342b7210/
 [product-screenshot]: images/screenshot.png
+[forks-shield]: https://img.shields.io/React?style=for-the-badge
+
+[react-shield]: https://img.shields.io/badge/React-2596be?style=for-the-badge
+[typescript-shield]: https://img.shields.io/badge/Typescript-3072ec?style=for-the-badge
+[three-shield]: https://img.shields.io/badge/Three.js-eccd30?style=for-the-badge
+[vite-shield]: https://img.shields.io/badge/Vite-d02dff?style=for-the-badge
+[scss-shield]: https://img.shields.io/badge/SASS-ff2dc0?style=for-the-badge
