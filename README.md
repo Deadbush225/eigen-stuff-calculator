@@ -18,7 +18,7 @@
     <br />
     <a href="https://github.com/Deadbush225/eigen-stuff-calculator"><strong>Explore the docs »</strong></a>
     <br />
-    <a href="https://github.com/Deadbush225/eigen-stuff-calculator#demo">View Demo</a>
+    <a href="https://tutubi-eigen-stuff-calculator.vercel.app">View Demo</a>
     ·
     <a href="https://github.com/Deadbush225/eigen-stuff-calculator/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
