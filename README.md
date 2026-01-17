@@ -51,6 +51,7 @@ Our app **Eigen Stuff Calculator** is an interactive web application designed to
 **Advanced Features**
 - Android browser compatibility
 - Mobile-responsive design
+- Latex rendering for math
 
 ## Usage Guide
 > 💡**Pro Tip: the website has interactive onboarding for new users**
