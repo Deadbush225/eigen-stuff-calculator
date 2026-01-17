@@ -130,14 +130,62 @@ eigen-stuff-calculator/
 │   │   ├── MatrixInput.tsx         # Interactive matrix input component 
 │   │   ├── EigenvalueSolution.tsx  # Step-by-step component 
 │   │   └── Tour.tsx                # User onboarding component 
-│   ├── lib/                     # All logic and processing 
-│   │   ├── eigenStuffFinder.ts     # Eigenspace computation
+│   ├── lib/                     # All logic and processing
+│   │   ├── solver/
+│   │   │   ├── usingDiagonalization.ts # solve the matrix using diagonalization thru QR Algorithm (for larger matrixes)
+│   │   │   ├── usingRealRoots.ts       # solve the matrix by finding the roots
+│   │   ├── eigenStuffFinder.ts     # Eigenspace computation API
 │   │   ├── matrixOperations.ts     # Linear algebra utilities
-│   │   └── determinantFinder.ts    # Determinant logic
-│   ├── App.tsx                 # Main application entry 
+│   │   ├── expressionDeflater.ts   # Deflate expression to a polynomial to show it better (only for visualization, not used for calculations)
+│   │   ├── latexFormatter.ts       # Format string to/from a mathjax string (used to serialize and deserialize latex specific strings)
+│   │   ├── matrixOperations.ts     # Basic linear algebra calculations needed (Elementary Row Operations, Gauss Jordan, find numerical determinant)
+│   │   └── determinantFinder.ts    # Finding determinant expression (for visuzliation only, doesn't give numerical determinant)
+│   ├── App.tsx                 # Main application entry
+│   ├── main.tsx                # React inject
 │   └── App.css                 # Global theme and animations 
 ├── vite.config.ts           # Build configuration 
 └── package.json             # Dependency management 
+```
+
+```
+src
+ ┣ assets
+ ┃ ┗ react.svg
+ ┣ components
+ ┃ ┣ util
+ ┃ ┃ ┣ MathDisplay.tsx
+ ┃ ┃ ┣ MathSymbols.sass
+ ┃ ┃ ┗ MathSymbols.tsx
+ ┃ ┣ About.scss
+ ┃ ┣ About.tsx
+ ┃ ┣ EigenspaceInfo.scss
+ ┃ ┣ EigenspaceInfo.tsx
+ ┃ ┣ EigenvalueSolution.scss
+ ┃ ┣ EigenvalueSolution.tsx
+ ┃ ┣ GraphAnimate.tsx
+ ┃ ┣ MatrixInput.scss
+ ┃ ┣ MatrixInput.tsx
+ ┃ ┣ Navbar.scss
+ ┃ ┣ Navbar.tsx
+ ┃ ┣ Tour.tsx
+ ┃ ┣ VisualizationLegend.scss
+ ┃ ┗ VisualizationLegend.tsx
+ ┣ lib
+ ┃ ┣ solver
+ ┃ ┃ ┣ usingDiagonalization.ts
+ ┃ ┃ ┗ usingRealRoots.ts
+ ┃ ┣ determinantFinder.ts
+ ┃ ┣ eigenStuffFinder.ts
+ ┃ ┣ expressionDeflater.ts
+ ┃ ┣ latexFormatter.ts
+ ┃ ┣ math.ts
+ ┃ ┗ matrixOperations.ts
+ ┣ types
+ ┃ ┗ react-mathjax2.d.ts
+ ┣ App.css
+ ┣ App.tsx
+ ┣ index.css
+ ┗ main.tsx
 ```
 
 ### Prerequisites
